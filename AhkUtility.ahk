@@ -54,15 +54,6 @@ class _ahkUtilsHelper {
 class DeclaredMembersOnly {
 	__Call(name, params*) {
 		if (!_ahkUtilsHelper.IsMemberBuiltIn(name) && !this._ahkUtilsDisableVerification) {
-			if (this.methods[name]) {
-				myMethod := this.methods[name]
-				minParams := this.methods[name].MinParams
-				maxParams := this.methods[name].MaxParams
-				myCount := params.MaxIndex() + 1
-				if (minParams <= myCount && myCount <= maxParams) {
-					return myMethod.Call(params*)
-				}
-			}
 			FancyEx.Throw("Tried to call undeclared method '" name "'.")
 		}
 	}
@@ -274,6 +265,20 @@ class Utils extends DeclaredMembersOnly {
 	
 	class Hotkey extends DeclaredMembersOnly 
 	{
+		HotkeyName(hotkeyName := "") 
+		{
+			hotkeyName := hotkeyName == "" ? A_ThisHotkey : hotkeyName
+			RegExMatch(A_ThisHotKey, "([$*+~^!#<>?]*)(.+)", hotkey)
+			if (InStr(hotkey1, "+") && StrLen(hotkey2) = 1)
+			{
+				if hotkey is lower
+				{
+					StringUpper, hotkey2, hotkey2
+				}
+			}
+			return hotkey2
+		}
+		
 		RegisterUpDown(hk,downHandler, upHandler = "", options = "") {
 			if (hk = "None") {
 				return
@@ -500,8 +505,6 @@ class Utils extends DeclaredMembersOnly {
 	}
 
 	class String extends DeclaredMembersOnly {
-	
-	
 		PadRight(str, toWidth, char := " ")
 		{
 			myLen := StrLen(str)
