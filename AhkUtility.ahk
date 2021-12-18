@@ -1,4 +1,4 @@
- 
+
 ; ================================================================
 ; Contains utility commonly used utility functions.
 ; Meant to be reusable.
@@ -18,7 +18,7 @@ class _ahkUtilsHelper {
 		}
 		return 0	
 	}
-	
+
 	StringRepeat(what, count) {
 		result := ""
 		Loop, % count
@@ -27,13 +27,13 @@ class _ahkUtilsHelper {
 		}
 		return result
 	}
-	
+
 	static _builtInNames:=["_NewEnum", "methods", "HasKey", "_ahkUtilsDisableVerification", "Clone", "GetAddress", "SetCapacity", "GetCapacity", "MinIndex", "MaxIndex", "Length", "Delete", "Push", "Pop", "InsertAt", "RemoveAt", "base", "__Set", "__Get", "__Call", "__New", "__Init", "_ahkUtilsIsInitialized"]
-	
+
 	IsMemberBuiltIn(member) {
 		return this.IndexOf(this._builtInNames, member) > 0
 	}
-	
+
 	StringJoin(what, sep="") {
 		res:=""
 		for ix, value in what
@@ -59,9 +59,9 @@ class DeclaredMembersOnly {
 	}
 
 	__New() {
-	
+
 	}
-	
+
 	__Init() {
 		; We want to disable name verification to allow the extending object's initializer to safely initialize the type's fields.
 		if (this._ahkUtilsDisableVerification) {
@@ -69,7 +69,7 @@ class DeclaredMembersOnly {
 		}
 		this._ahkUtilsDisableVerification := true
 		this.methods := { }
-		
+
 		this.__Init()
 		this.Delete("_ahkUtilsDisableVerification")
 	}
@@ -79,7 +79,7 @@ class DeclaredMembersOnly {
 			FancyEx.Throw("Tried to get the value of undeclared member '" name "'.")
 		}
 	}
-	
+
 	__Set(name, values*) {
 		if (!_ahkUtilsHelper.IsMemberBuiltIn(name) && !this._ahkUtilsDisableVerification) {
 			FancyEx.Throw("Tried to set the value of undeclared member '" name "'.")
@@ -89,17 +89,17 @@ class DeclaredMembersOnly {
 	__DisableVerification() {
 		ObjRawSet(this, "_ahkUtilsDisableVerification", true)
 	}
-	
+
 	__EnableVerification() {
 		this.Delete("_ahkUtilsDisableVerification")
 	}
-	
+
 	__IsVerifying[] {
 		get {
 			return !this.HasKey("_ahkUtilsDisableVerification")
 		}
 	}
-	
+
 	__RawGet(name) {
 		this.__DisableVerification()
 		value := this[name]
@@ -112,12 +112,12 @@ class DeclaredMembersOnly {
 ; A 'namespace'-type class containing all the utility functions.
 class Utils extends DeclaredMembersOnly {
 	; 
-	class Lang extends DeclaredMembersOnly  {
+	class Lang extends DeclaredMembersOnly {
 		DoesVarExist(ByRef var) {
-		   return &var = &something ? 0 : var = "" ? 2 : 1 
+			return &var = &something ? 0 : var = "" ? 2 : 1 
 		}
 	}
-	
+
 	class System extends DeclaredMembersOnly {
 		; Returns true if the mouse cursor is visible in the active window (used for games).
 		; May not work correctly in all games.
@@ -129,15 +129,43 @@ class Utils extends DeclaredMembersOnly {
 			Result := NumGet(InfoStruct, 8)
 			return Result > 1
 		}
-		
+
 		; Returns a ProcessView object that allows read-only inspection of the process and its memory.
 		; title - The title of the window for which to generate the view, or another suitable identifier (as WinExist)
 		OpenProcessView(title) {
 			return new this.ProcessView(title)
 		}
-		
+
 		GetCurrentProcessId() {
 			return DllCall("GetCurrentProcessId")	
+		}
+
+		IsAppFullScreen(WinID) {
+			;checks if the specified window is full screen
+			;code from NiftyWindows source
+			;(with only slight modification)
+
+			;use WinExist of another means to get the Unique ID (HWND) of the desired window
+
+			if ( !WinID )
+				return
+
+			WinGet, WinMinMax, MinMax, ahk_id %WinID%
+			WinGetPos, WinX, WinY, WinW, WinH, ahk_id %WinID%
+
+			if (WinMinMax = 0) && (WinX = 0) && (WinY = 0) && (WinW = A_ScreenWidth) && (WinH = A_ScreenHeight)
+			{
+				WinGetClass, WinClass, ahk_id %WinID%
+				WinGet, WinProcessName, ProcessName, ahk_id %WinID%
+				SplitPath, WinProcessName, , , WinProcessExt
+
+				if (WinClass != "Progman") && (WinProcessExt != "scr")
+				{
+					;program is full-screen
+					return true
+				}
+			}
+			return false
 		}
 
 		; Provides read-only access to a process and its memory, can generate references to memory locations owned by the process.
@@ -145,48 +173,48 @@ class Utils extends DeclaredMembersOnly {
 			WindowTitle:="Uninit"
 			ProcessHandle:=0
 			Privilege:=0x1F0FFF
-			
+
 			; Private
 			_getBaseAddress(hWnd) {
 				return DllCall( A_PtrSize = 4
-										? "GetWindowLong"
-										: "GetWindowLongPtr"
-									, "Ptr", hWnd
-									, "Int", -6
-									, "Int64") ; Use Int64 to prevent negative overflow when AHK is 32 bit and target process is 64bit
-				 ; If DLL call fails, returned value will = 0
+					? "GetWindowLong"
+					: "GetWindowLongPtr"
+					, "Ptr", hWnd
+					, "Int", -6
+				, "Int64") ; Use Int64 to prevent negative overflow when AHK is 32 bit and target process is 64bit
+				; If DLL call fails, returned value will = 0
 			}
-			
+
 			WindowHandle[] {
 				get {
 					WinGet, hwnd, ID, % this.WindowTitle
 					return hwnd
 				}
 			}
-			
+
 			BaseAddress[] {
 				get {
 					return this._getBaseAddress(this.WindowHandle)
 				}
 			}
-			
+
 			ProcessId[] {
 				get {
 					WinGet, pid, PID, %windowTitle%
 					return pid
 				}
 			}
-			
+
 			__New(windowTitle) {
 				this.WindowTitle := windowTitle
 			}
-			
+
 			; Reads from a memory location owned by the process.
 			; addr - An absolute address of the memory location to read.
 			; datatype - The datatype. Use int/uint for bytes.
 			; length - the number of bytes to be read from the location.
 			Read(addr, datatype="int", length=4) {
-				
+
 				prcHandle := DllCall("OpenProcess", "Ptr", this.Privilege, "int", 0, "int", this.ProcessId)
 				VarSetCapacity(readvalue,length, 0)
 				DllCall("ReadProcessMemory","Ptr",prcHandle,"Ptr",addr,"Str",readvalue,"Uint",length,"Ptr *",0)
@@ -197,12 +225,12 @@ class Utils extends DeclaredMembersOnly {
 					SetFormat, Integer, Hex 
 					addr:=addr . ""
 					msg=Tried to read memory at address '%addr%', but ReadProcessMemory failed. Last error: %A_LastError%. 
-					
+
 					FancyEx.Throw(msg)
 				}
 				return finalvalue
 			}
-			
+
 			; Reads from a memory location owned by the process, 
 			; the memory location being determined from a nested base pointer, and a list of offsets.
 			; address - the absolute address to read.
@@ -219,32 +247,32 @@ class Utils extends DeclaredMembersOnly {
 				SetFormat, Integer, %B_FormatInteger%
 				return this.Read(address,datatype,length)
 			}
-			
+
 			; Same as ReadPointer, except that the first parameter is an *offset* starting from the base address of the active window of the process.
 			ReadPointerByOffset(baseOffset, datatype, length, offsets) {
 				return this.ReadPointer(this.BaseAddress + baseOffset, datatype, length, offsets)
 			}
-			
+
 			; Returns a self-contained ProcessVariableReference that allows reading from the specified memory location (as ReadPointer).
 			GetReference(baseOffsets, offsets, dataType, length, label := "") {
 				return new this.ProcessVariableReference(this, baseOffsets, offsets, dataType, length, label) 				
 			}	
-			
+
 			; Closes the ProcessView. Further operations are undefined.
 			Close() {
 				r := DllCall("CloseHandle", "Ptr", hwnd)
 				this.ProcessHandle := 0
 			}
-			
+
 			; Self-contained class for viewing a memory location owned by the process.
-			class ProcessVariableReference extends DeclaredMembersOnly  {
+			class ProcessVariableReference extends DeclaredMembersOnly {
 				Process:="Uninit"
 				BaseOffset:="Uninit"
 				Offsets:="Uninit"
 				DataType:="Uninit"
 				Length:="Uninit"
 				Label:="Uninit"
-				
+
 				__New(process, baseOffset, offsets, dataType, length, label := "") {
 					this.Process:=Process
 					this.BaseOffset:=baseOffset
@@ -253,7 +281,7 @@ class Utils extends DeclaredMembersOnly {
 					this.Length:=length
 					this.Label := label
 				}
-				
+
 				Value[] {
 					get {
 						return this.Process.ReadPointerByOffset(this.BaseOffset, this.DataType, this.Length, this.Offsets)
@@ -262,7 +290,7 @@ class Utils extends DeclaredMembersOnly {
 			}
 		}
 	}
-	
+
 	class Hotkey extends DeclaredMembersOnly 
 	{
 		HotkeyName(hotkeyName := "") 
@@ -278,7 +306,7 @@ class Utils extends DeclaredMembersOnly {
 			}
 			return hotkey2
 		}
-		
+
 		RegisterUpDown(hk,downHandler, upHandler = "", options = "") {
 			if (hk = "None") {
 				return
@@ -288,7 +316,7 @@ class Utils extends DeclaredMembersOnly {
 				this.Register(hk " up", upHandler, options)
 			}
 		}
-		
+
 		Register(hk, handler, options = "") {
 			if (hk = "None") {
 				return
@@ -299,12 +327,12 @@ class Utils extends DeclaredMembersOnly {
 				FancyEx.Throw("Failed to register hotkey", ex)
 			}
 		}
-		
+
 		RegisterAlias(hotkey, target, wheelDuration = 35) {
 			if (hk = "None") {
 				return
 			}			
-			
+
 			if (hotkey = "WheelUp" || hotkey = "WheelDown") {
 				Utils.Hotkey.Register(hotkey, Utils.Send.HoldDown.Bind(Utils.Send, target, wheelDuration))
 				return
@@ -312,29 +340,29 @@ class Utils extends DeclaredMembersOnly {
 			method := Utils.Send.SendInput
 			Utils.Hotkey.RegisterUpDown(hotkey, method.Bind(Utils.Send, "{" target " down}"), method.Bind(Utils.Send, "{" target " up}"))
 		}
-		
+
 		static _monitoredKeyTable:=""
-		
+
 		_recordTime(name) {
 			this._monitoredKeyTable[name] := A_TickCount
 		}
-		
+
 		RecordTickCount(hotkey, name, options := "") {
 			this._monitoredKeyTable[name] := hotkey
 			this.Register(hotkey, this._recordTime.Bind(this, name), options) 
 		}
-		
+
 		GetRecordedTickCount(name) {
 			return this._monitoredKeyTable[name]
 		}
 	}
-	
+
 	class Send extends DeclaredMembersOnly {
-		
+
 		SendInput(input) {
 			SendInput, % input
 		}
-	
+
 		; Sends a raw input string through copy-paste functionality, rather than the keyboard. 
 		; This is required for some kinds of sequences.
 		; This is achieved by using the Clipboard and sending Ctrl+V.
@@ -348,7 +376,7 @@ class Utils extends DeclaredMembersOnly {
 			Clipboard:=tmp
 			return
 		}
-		
+
 		; Holds down the key 'key' for 'ms' milliseconds. This is a string which is passed to SendInput, so use key names for things like Space.
 		; If ms = -1 (default), the 'up' command isn't transmited (the key is never released).
 		HoldDown(key, ms = -1)
@@ -363,9 +391,7 @@ class Utils extends DeclaredMembersOnly {
 				SendInput, {%key% up}
 			}
 		}
-			
-	
-			
+
 		; Holds down the list object 'keys' for a period of 'ms' milliseconds.
 		HoldDownMany(keys, ms = -1) 
 		{
@@ -384,7 +410,7 @@ class Utils extends DeclaredMembersOnly {
 				}
 			}
 		}
-		
+
 		HoldDownRepeat(key, count, holdDown, betweenPresses) {
 			Loop, % count
 			{
@@ -392,7 +418,7 @@ class Utils extends DeclaredMembersOnly {
 				Sleep, % betweenPresses
 			}
 		}
-		
+
 		StopHolding(key) {
 			if (GetKeyState(key, "T")) {
 				SendInput, {%key% up}
@@ -411,7 +437,7 @@ class Utils extends DeclaredMembersOnly {
 			}
 			return arr
 		}
-		
+
 		Length(arr) 
 		{
 			len:=arr.Length()
@@ -426,7 +452,7 @@ class Utils extends DeclaredMembersOnly {
 			}
 			return len
 		}
-		
+
 		; Returns the index at which 'what' appears in the array 'arr', or 0 if no such item was found.
 		IndexOf(arr, what) {
 			return _ahkUtilsHelper.IndexOf(arr, what)
@@ -444,7 +470,7 @@ class Utils extends DeclaredMembersOnly {
 			}
 			return arr
 		}
-		
+
 		; Concatenates two non-associative arrays.
 		Concat(a, b)
 		{
@@ -455,7 +481,7 @@ class Utils extends DeclaredMembersOnly {
 				c.Insert(y)
 			return c
 		}
-		
+
 		Subsequence(arr, firstIndex = "start", lastIndex = "end") {
 			result:=[]
 			firstIndex:=firstIndex != "start" ? firstIndex : arr.MinIndex()
@@ -469,7 +495,7 @@ class Utils extends DeclaredMembersOnly {
 			}
 			return result
 		}
-		
+
 		Map(arr, projection) {
 			result:=[]
 			for index, key in arr
@@ -478,7 +504,7 @@ class Utils extends DeclaredMembersOnly {
 			}
 			return result
 		}
-		
+
 		Take(arr, n)
 		{
 			newArr := []
@@ -486,12 +512,12 @@ class Utils extends DeclaredMembersOnly {
 			for ix, item in arr
 			{
 				if (i == n) break
-				newArr.Insert(item)
+					newArr.Insert(item)
 				i := i + 1
 			}
 			return newArr
 		}
-		
+
 		Filter(arr, filter) {
 			result:=[]
 			for index, key in arr
@@ -510,21 +536,21 @@ class Utils extends DeclaredMembersOnly {
 			myLen := StrLen(str)
 			extras := toWidth - myLen
 			if (extras <= 0) return str
-			padding := Utils.String.Repeat(char, extras)
+				padding := Utils.String.Repeat(char, extras)
 			result := str padding
 			return result
 		}
-		
+
 		PadLeft(str, toWidth, char := " ")
 		{
 			myLen := StrLen(str)
 			extras := toWidth - myLen
 			if (extras <= 0) return str
-			padding := Utils.String.Repeat(char, extras)
+				padding := Utils.String.Repeat(char, extras)
 			result := padding str 
 			return result
 		}		
-		
+
 		ToList(str) {
 			list:=[]
 			Loop, Parse, str
@@ -533,8 +559,7 @@ class Utils extends DeclaredMembersOnly {
 			}
 			return list
 		}
-		
-		
+
 		StartsWith(where, what, caseSensitive) 
 		{
 			if (what == "") 
@@ -545,7 +570,7 @@ class Utils extends DeclaredMembersOnly {
 			initial := SubStr(where, 1, len)
 			return caseSensitive ? initial == what : initial = what
 		}
-	
+
 		; Similar to String.Format in C#. Numeric tokens, written [n], are replaced by the array 'data'
 		; With [index] being replaced by data[index]. data can also not be an array, in which case it is used as [1].
 		; Tokens of the form [!name] are replaced by the interpolated contents of the global variable 'name'.
@@ -585,23 +610,23 @@ class Utils extends DeclaredMembersOnly {
 			StringReplace, res, format, [[, [, All
 			return res
 		}
-		
+
 		Contains(where, what)
 		{
 			return
 		}
-		
+
 		; Joins an array of strings into a single string, placing a separator between them.
 		Join(what, sep="") 
 		{
 			return _ahkUtilsHelper.StringJoin(what, sep)
 		}	
-		
+
 		Repeat(what, count) 
 		{
 			return _ahkUtilsHelper.StringRepeat(what, count)
 		}
-		
+
 		Split(what, delims = "", omits = "") 
 		{
 			return StrSplit(what, delims, omits)
@@ -639,10 +664,10 @@ class Utils extends DeclaredMembersOnly {
 		; Matches the speicfic regex 
 		MultiMatch(haystack, needle)
 		{
-		   array:=[]
-		   while (pos := RegExMatch(haystack, needle, match, ((pos>=1) ? pos : 1)+StrLen(match)))
-			  array[A_Index]:=match
-		   Return array
+			array:=[]
+			while (pos := RegExMatch(haystack, needle, match, ((pos>=1) ? pos : 1)+StrLen(match)))
+				array[A_Index]:=match
+			Return array
 		}
 	}
 }
