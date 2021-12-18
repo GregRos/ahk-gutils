@@ -99,7 +99,7 @@ class FancyEx {
 		if (ex.StackTrace) {
 			for ix, entry in ex.StackTrace
 			{
-				stackTrace.="• " entry.Function " [" entry.File " ln#" entry.Line "]" "`r`n"
+				stackTrace.="ï¿½ " entry.Function " [" entry.File " ln#" entry.Line "]" "`r`n"
 			}
 		}
 		else {
@@ -111,7 +111,7 @@ class FancyEx {
 			if (ex.Data.Length() > 0) {
 				for key, value in ex.Data
 				{
-					data.="• " key " = """ value """`r`n"
+					data.="ï¿½ " key " = """ value """`r`n"
 				}
 			}
 			else {
@@ -129,7 +129,7 @@ class FancyEx {
 			if (key = "StackTrace" || key = "Data" || key = "InnerException" || key = "Message" || key = "Type") {
 				continue
 			}
-			props.="• " key " = """ value """`r`n"
+			props.="ï¿½ " key " = """ value """`r`n"
 		}
 		props:=this._indentLines(props, "`t", 1)
 		innerEx:=""
@@ -254,45 +254,8 @@ Inner Exception:
 		return
 	}
 	
-	_handleMessage(wParam, lParam) {
-
-		old := A_DetectHiddenWindows
-		DetectHiddenWindows, On
-		WinGet, pid, PID, ahk_id %lParam%
-		if (wParam = 1 && pid = this._myPid) { ; HSHELL_WINDOWCREATED = 1
-			if (this._isHandlingMessage) {
-				return ; we don't want to process more than one message at a time...
-			}
-			this._isHandlingMessage := true
-			; Means our process opened a window. We gotta check if the window text contains the GUID we planted inside the exception, 
-			; and if its GWL_USERDATA attribute equals the empirically determined value 0x0000436F.			
-			gwlp_userData:= DllCall("GetWindowLongPtr", "Ptr", lParam, "Int", -21, "Int64") ; -21 = GWLP_USERDATA, gets GWL_USERDATA
-			gwlp_userDataInitial:=gwlp_userData >> 8
-			WinGetText, text, ahk_id %lParam%
-			if (FancyEx._lastThrownException && InStr(text, FancyEx._lastThrownException.InstanceGuid, true)) {
-				; This HAS to be a correct error window...
-				if (this.UnhandledExceptionHandler) {
-					; If there is no registered UnhandledExceptionHandler, we don't do anything.
-					WinClose, ahk_id %lParam%	
-					this.UnhandledExceptionHandler.Call(FancyEx._lastThrownException)
-				}
-			}
-		}
-		this._isHandlingMessage := false
-		DetectHiddenwindows, % old
-	}
-	
 	_initialize() {
-		; the message hook is from: http://www.autohotkey.com/board/topic/32628-tool-shellhook-messages/
-		this._myPid:=DllCall("GetCurrentProcessId")
-		old := A_DetectHiddenWindows
-		DetectHiddenWindows, On
-		Hwnd := WinExist("ahk_pid " this._myPid)
-		DllCall( "RegisterShellHookWindow", UInt,Hwnd )
-		MsgNum := DllCall( "RegisterWindowMessage", Str,"SHELLHOOK" )
-		OnMessage( MsgNum, this._handleMessage.Bind(this) )
-		DetectHiddenWindows, % old
-		this.UnhandledExceptionHandler := this._openExceptionViewerFor.Bind(this)
+		OnError(this._openExceptionViewerFor.Bind(this))
 	}
 }
 FancyEx._initialize()
