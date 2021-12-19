@@ -109,6 +109,35 @@ class DeclaredMembersOnly {
 
 }
 
+class ComObjectInvoker extends DeclaredMembersOnly {
+	_ref := ""
+	_onDispose := []
+	__New(ref, dependencies = "") {
+		this._ref := ref
+		for i, v in dependencies {
+			this._onDispose.Push(v)
+		}
+	}
+
+	AddDependencies(dependencies*) {
+		for i, v in dependencies {
+			this._onDispose.Push(v)
+		}
+	}
+
+	DllCall(slot, args*) {
+		x:= slot*A_PtrSize
+		DllCall(NumGet(NumGet(this._ref+0)+slot*A_PtrSize) , "UPtr", this._ref + 0, args*)
+	}
+
+	Dispose() {
+		ObjRelease(this._ref)
+		for i, v in this._onDispose {
+			ObjRelease(v)
+		}
+	}
+}
+
 ; A 'namespace'-type class containing all the utility functions.
 class Utils extends DeclaredMembersOnly {
 	; 
@@ -128,6 +157,10 @@ class Utils extends DeclaredMembersOnly {
 			DllCall("GetCursorInfo", UInt, &InfoStruct)
 			Result := NumGet(InfoStruct, 8)
 			return Result > 1
+		}
+
+		CreateInvoker(ref, rest*) {
+			return new ComObjectInvoker(ref, rest)
 		}
 
 		; Returns a ProcessView object that allows read-only inspection of the process and its memory.
