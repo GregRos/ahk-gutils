@@ -1,4 +1,4 @@
-
+﻿
 ; ================================================================
 ; Contains utility commonly used utility functions.
 ; Meant to be reusable.
@@ -568,8 +568,10 @@ class Utils extends DeclaredMembersOnly {
 		{
 			myLen := StrLen(str)
 			extras := toWidth - myLen
-			if (extras <= 0) return str
-				padding := Utils.String.Repeat(char, extras)
+			if (extras <= 0) {
+				return str
+			}
+			padding := Utils.String.Repeat(char, extras)
 			result := str padding
 			return result
 		}
@@ -578,8 +580,10 @@ class Utils extends DeclaredMembersOnly {
 		{
 			myLen := StrLen(str)
 			extras := toWidth - myLen
-			if (extras <= 0) return str
-				padding := Utils.String.Repeat(char, extras)
+			if (extras <= 0) {
+				return str
+			}
+			padding := Utils.String.Repeat(char, extras)
 			result := padding str 
 			return result
 		}		
