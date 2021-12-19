@@ -125,7 +125,7 @@ class ComObjectInvoker extends DeclaredMembersOnly {
 		}
 	}
 
-	DllCall(slot, args*) {
+	VtableCall(slot, args*) {
 		x:= slot*A_PtrSize
 		DllCall(NumGet(NumGet(this._ref+0)+slot*A_PtrSize) , "UPtr", this._ref + 0, args*)
 	}
