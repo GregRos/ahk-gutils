@@ -232,15 +232,16 @@ class Utils extends DeclaredMembersOnly {
 			Return sOutput
 		}
 
-		IsAppFullScreen(WinID) {
+		IsAppFullScreen(WinID := "") {
 			;checks if the specified window is full screen
 			;code from NiftyWindows source
 			;(with only slight modification)
 
 			;use WinExist of another means to get the Unique ID (HWND) of the desired window
 
-			if ( !WinID )
-				return
+			if ( !WinID ) {
+				WinGet, WinID, ID, A
+			}
 
 			WinGet, WinMinMax, MinMax, ahk_id %WinID%
 			WinGetPos, WinX, WinY, WinW, WinH, ahk_id %WinID%
