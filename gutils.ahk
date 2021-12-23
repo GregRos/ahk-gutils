@@ -229,6 +229,7 @@ gLang_VarExists(ByRef var) {
 __g_builtInNames:=["_NewEnum", "methods", "HasKey", "_ahkUtilsDisableVerification", "Clone", "GetAddress", "SetCapacity", "GetCapacity", "MinIndex", "MaxIndex", "Length", "Delete", "Push", "Pop", "InsertAt", "RemoveAt", "base", "__Set", "__Get", "__Call", "__New", "__Init", "_ahkUtilsIsInitialized"]
 
 gLang_IsNameBuiltIn(name) {
+    global __g_builtInNames
     return gArr_IndexOf(__g_builtInNames, name)
 }
 
@@ -304,6 +305,14 @@ gLang_StackTraceObj(ignoreLast := 0) {
     }
 
     return r
+}
+
+gSys_ProcessView(winTitle) {
+    return new gProcessView(winTitle)
+}
+
+gSys_ComInvoker(ref, dependencies := "") {
+    return new gComObjectInvoker()
 }
 
 gSys_IsMouseCursorVisible() {
