@@ -2,11 +2,11 @@
 ; Contains utility commonly used utility functions.
 ; Meant to be reusable.
 ; ================================================================
-#include ex.ahk
+#include gutils-ex.ahk
 
-__g_NormalizeIndex(negIndex) {
-	if (negIndex < 0) {
-		return -negIndex
+__g_NormalizeIndex(negIndex, length) {
+	if (negIndex <= 0) {
+		return length + negIndex
 	}
 	return negIndex
 }
@@ -236,7 +236,20 @@ gLang_NormFunc(funcOrName) {
 	if (IsObject(funcOrName)) {
 		return funcOrName
 	}
-	return Func(funcOrName)
+	result := Func(funcOrName)
+	return result
+}
+
+gLang_Call(funcOrName, args*) {
+	funcOrName := gLang_NormFunc(funcOrName)
+	if (funcOrName.MinParams > args.MaxIndex()) {
+		Throw "Passed too few parameters for function."
+	}
+	maxParams := funcOrName.MaxParams
+	if (maxParams < args.MaxIndex()) {
+		args := gArr_Take(args, maxParams)
+	}
+	return funcOrName.Call(args*)
 }
 
 ; Represents an entry in a stack trace.
@@ -370,11 +383,32 @@ gArr_IndexOf(arr, what) {
 	return 0	
 }
 
+gArr_Find(arr, func) {
+	func := gLang_NormFunc(func)
+	return gArr_Filter(arr, func)[1]
+}
+
+gArr_FindIndexes(arr, func) {
+	results := []
+	func := gLang_NormFunc(func)
+	for index, item in arr {
+		if (gLang_Call(func, item, index)) {
+			results.push(index)
+		}
+	}
+	return results
+}
+
+gArr_FindIndex(arr, func) {
+	return gArr_FindIndexes(arr, func)[1]
+}
+
 gArr_Order(what, options := "N") {
-	str:= gStr_Join(what, ",")
+	str:= gStr_Join(what, "~")
+	options .= " D~"
 	Sort, str, %options%
 	arr:=[]
-	Loop, Parse, str, ` 
+	Loop, Parse, str, ~ 
 	{
 		arr.Insert(A_LoopField)
 	}
@@ -388,19 +422,19 @@ gArr_Concat(arrs*) {
 			c.Push(item)
 		}
 	}
-	return item
+	return c
 }
 
-gArr_Slice(arr, start := 1, end := -1) {
+gArr_Slice(arr, start := 1, end := 0) {
 	result:=[]
-	start:= __g_NormalizeIndex(start)
-	end:= __g_NormalizeIndex(end)
+	start:= __g_NormalizeIndex(start, arr.MaxIndex())
+	end:= __g_NormalizeIndex(end, arr.MaxIndex())
 	if (end < start) {
 		return result
 	}
-	Loop, % lastIndex - firstIndex + 1
+	Loop, % end - start + 1
 	{
-		result.Insert(arr[firstIndex + A_Index - 1])
+		result.Insert(arr[start + A_Index - 1])
 	}
 	return result
 }
@@ -409,22 +443,29 @@ gArr_Map(arr, projection) {
 	projection := gLang_NormFunc(projection)
 	result := []
 	for index, item in arr {
-		result.Push(projection.Call(item, index))
+		result.Push(gLang_Call(projection, item, index))
 	}
 	return result
 }
 
 gArr_Take(arr, n) {
-	return gArr_Slice(arr, 0, n - 1)
+	return gArr_Slice(arr, 1, n)
 }
 
 gArr_Filter(arr, filter) {
 	filter := gLang_NormFunc(filter)
+	result := []
 	for index, item in arr {
-		if (filter.Call(item, index)) {
-			result.Push(key)
+		if (gLang_Call(filter, item, index)) {
+			result.Push(item)
 		}
 	}
+	return result
+}
+
+gArr_FindLastIndex(arr, filter) {
+	arr := gArr_FindIndexes(arr, filter)
+	return arr[arr.MaxIndex()]
 }
 
 gStr_PadRight(str, toWidth, char := " ") {
@@ -509,10 +550,13 @@ gStr_Join(what, sep:="", omit:="") {
 	return res
 }
 
-gStr_Repeat(what, count) {
+gStr_Repeat(what, count, delim := "") {
 	result := ""
 	Loop, % count 
 	{
+		if (A_Index != 1) {
+			result .= delim
+		}
 		result.= what
 	}
 	return result
