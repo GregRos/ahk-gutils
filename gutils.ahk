@@ -571,6 +571,35 @@ gStr_Repeat(what, count, delim := "") {
     return result
 }
 
+gStr_IndexOf(where, what, case := false, pos := 1, occurrence := 1) {
+    return InStr(where, what, case, pos, occurrence)
+}
+
+gStr_Reverse(what) {
+    str := ""
+    Loop, Parse, % what 
+    {
+        str := A_LoopField str
+    }
+
+    return str
+}
+
+gStr_LastIndexOf(where, what, case := false, pos := 1) {
+    reverse := gStR_Reverse(where)
+    return StrLen(where) - gStR_IndexOf(where, what, case, pos) + 1
+}
+
+gStr_Slice(where, start := 1, end := 0) {
+    start := __g_NormalizeIndex(start, StrLen(where))
+    end := __g_NormalizeIndex(end, StrLen(where))
+    return SubStr(where, start, end - start + 1)
+}
+
+gStr_Split(what, delimeters, omit := "", max := 0) {
+    return StrSplit(what, delimeters, omit, max)
+}
+
 gRegEx_MultiMatchGroups(haystack, needle) {
     array:=[]
     Loop, 10 

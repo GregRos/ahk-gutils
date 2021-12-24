@@ -35,4 +35,7 @@ gAssert_Eq(gStr_Join([" 1", "x2", "3"], "_", "x "), "1_2_3")
 gAssert_Eq(gStr_Repeat("x", 5, ","), "x,x,x,x,x")
 gAssert_Eq(!!gSys_ProcessView(""), True)
 gAssert_Eq(!!gSys_ComInvoker(0, ""), True)
+gAssert_Eq(gStR_IndexOf("abc", "b"), 2)
+gAssert_Eq(gStr_Reverse("abc"), "cba")
+gAssert_eq(gStr_LastIndexOf("abcabca", "a"), 7)
 ExitApp
