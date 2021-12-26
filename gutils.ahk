@@ -312,7 +312,7 @@ gSys_ProcessView(winTitle) {
 }
 
 gSys_ComInvoker(ref, dependencies := "") {
-    return new gComObjectInvoker()
+    return new gComObjectInvoker(ref, dependencies)
 }
 
 gSys_IsMouseCursorVisible() {
