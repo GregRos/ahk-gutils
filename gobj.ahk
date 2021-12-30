@@ -1,4 +1,4 @@
-﻿#include _internals.ahk
+﻿#include _common.ahk
 #include garr.ahk
 __g_isObject(name, obj, canBeArray := False) {
     if (!isObject(obj)) {
@@ -66,7 +66,7 @@ class gObjValidator extends gDeclaredMembersOnly {
         }
         if (this.optionalKeys != True) {
             for k, v in obj {
-                if (gArr_IndexOf(this.optionalKeys, k)) {
+                if (!gArr_IndexOf(this.optionalKeys, k)) {
                     return {valid: False, reason: Format("Unknown key '{1}'.", k)}
                 }
             }
@@ -103,4 +103,5 @@ gObj_Omit(obj, keys*) {
             result[k] := obj[k]
         }
     }
+    return result
 }

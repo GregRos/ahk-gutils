@@ -1,4 +1,4 @@
-#include _internals.ahk
+#include _common.ahk
 
 gEx_Print(ex) {
     msg:=ex.Message, type:=ex.Type

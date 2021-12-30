@@ -1,4 +1,4 @@
-#include _internals.ahk
+#include _common.ahk
 class gVtableInvoker extends gDeclaredMembersOnly {
     _ref := ""
     _onDispose := []

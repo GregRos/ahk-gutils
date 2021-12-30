@@ -49,6 +49,13 @@ gAssert_Eq(gStr_FromCodeArray([asc("a"), asc("b"), asc("c")]), "abc")
 gAssert_Eq(gStr_Replace("aaabbb", "a", "b", 2), "bbabbb")
 gAssert_Eq(gStr_ToChars("abc"), ["a", "b", "c"])
 
+testObj := {a: 1, b: 1, c: 3}
+gAssert_Eq(gObj_HasAnyKey(testObj, "x", "b"), True)
+gAssert_Eq(gObj_Keys(testObj), ["a", "b", "c"])
+gAssert_Eq(gObj_Pick(testObj, "a", "b"), {a: 1, b:1})
+gAssert_Eq(gObj_FromKeys(["a", "b"]), {a: 1, b: 1})
+gAssert_Eq(gObj_Omit(testObj, "b", "c"), {b:1, c:3})
+
 gAssert_Eq(!!gSys_ProcessView(""), True)
 gAssert_Eq(!!gSys_ComInvoker(0, ""), True)
 gAssert_Gtr(gSys_CurrentPid(), 1000)

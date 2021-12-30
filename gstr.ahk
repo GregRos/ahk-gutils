@@ -1,4 +1,4 @@
-﻿#include _internals.ahk
+﻿#include _common.ahk
 gStr_PadRight(ByRef str, toWidth, char := " ") {
     myLen := StrLen(str)
     extras := toWidth - myLen
@@ -223,3 +223,19 @@ gStr_Is(ByRef what) {
 gStr_At(ByRef what, pos) {
     return SubStr(what, pos, 1)
 }
+
+gStr_Match(haystack, needle, options := "", pos := 1) {
+    needle := options "O)" needle
+    RegExMatch(haystack, needle, match, pos)
+    return match
+}
+
+gStr_Matches(haystack, needle, options := "", pos := 1) {
+    array:=[]
+    needle := options "O)" needle
+    while (pos := RegExMatch(haystack, needle, match, ((pos>=1) ? pos : 1)+StrLen(match))) {
+        array.Push(match)
+    }
+    Return array
+}
+

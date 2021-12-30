@@ -1,4 +1,4 @@
-#include _internals.ahk
+#include _common.ahk
 
 gWin_IsFullScreen(winTitle := "") {
     ;checks if the specified window is full screen
@@ -38,8 +38,8 @@ gWin_IsMouseCursorVisible() {
 
 __g_MatchingInfoKeys := ["speed", "mode", "hiddenWindows", "hiddenText"]
 __g_QueryKeys := ["title", "text", "excludeTitle", "excludeText"]
-__g_MatchingInfoValidator := gObj_NewValidator("MatchingInfo", [], __g_MatchingInfoKeys)
-__g_QueryValidator := gObj_NewValidator("WinTitle", [], __g_QueryKeys)
+global __g_MatchingInfoValidator := gObj_NewValidator("MatchingInfo", [], __g_MatchingInfoKeys)
+global __g_QueryValidator := gObj_NewValidator("WinTitle", [], __g_QueryKeys)
 
 gWin_GetMatchingInfo() {
     return {hiddenWindows: A_DetectHiddenWindows, hiddenText: A_DetectHiddenText, speed: A_TitleMatchModeSpeed, mode: A_TitleMatchMode}

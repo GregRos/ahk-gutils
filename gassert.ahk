@@ -3,22 +3,26 @@ __g_AssertLastFrame(entry) {
     return InStr(entry.Function, "gAssert")
 }
 
-__g_ParseParens(ByRef str, ByRef pos) {
+global __g_openParen := ["[", "(", "{"]
+global __g_closeParen := ["]", ")", "}"]
+__g_ParseParens(ByRef str, ByRef pos, outerParen := "") {
     arr := []
-    cur := ""
+    cur := outerParen
     results := []
-    while (pos < StrLen(str)){
+
+    while (pos <= StrLen(str)){
         char := gSTr_At(str, pos)
         pos += 1
-        if (char = "(") {
+        if (gArr_Has(__g_openParen, char)) {
             if (cur) {
                 results.Push(cur)
-                cur := ""
             }
-            result := __g_ParseParens(str, pos)
+            cur := ""
+            result := __g_ParseParens(str, pos, char)
             results.Push(result)
         }
-        else if (char = ")") {
+        else if (gArr_Has(__g_closeParen, char)) {
+            cur .= char
             if (cur) {
                 results.Push(cur)
             }
@@ -35,9 +39,17 @@ __g_ParseParens(ByRef str, ByRef pos) {
 
 __g_recParen(what) {
     if (gStr_Is(what)) {
-        return Format("({1})", what)
+        return what
     }
     return gStr_Join(gArr_Map(what, "__g_recParen"), "")
+}
+
+__g_TrimParens(x) {
+    return Trim(x)
+}
+
+__g_nonEmpty(x) {
+    return !!x
 }
 
 __g_reparse(what) {
@@ -54,7 +66,10 @@ __g_reparse(what) {
         if (parts.MaxIndex() > 1) {
             for i, p in parts {
                 curArg .= p
-                realArgs.Push(curArg)
+                if (curArg) {
+                    realArgs.Push(curArg)
+                }
+
                 curArg := ""
             }
             continue
@@ -64,9 +79,15 @@ __g_reparse(what) {
     if (curArg) {
         realArgs.Push(curArg)
     }
+    realArgs := gArr_Map(realArgs, "__g_TrimParens")
+    realArgs[1] := gStr_TrimLeft(realArgs[1], "(")
+    realArgs[realArgs.MaxIndex()] := gStr_TrimRight(realArgs[realArgs.MaxIndex()], ")")
     realArgs.InsertAt(1, fName)
+    realArgs := gArr_Filter(realArgs, "__g_nonEmpty")
     return realArgs
 }
+
+
 
 __g_splitByTopmostArgs(parsed) {
     args := []

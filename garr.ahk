@@ -1,4 +1,4 @@
-﻿#include _internals.ahk
+﻿#include _common.ahk
 gArr_Repeat(item, count) {
     arr:=[]
     Loop, %count%
@@ -107,5 +107,5 @@ gArr_FindLastIndex(arr, filter) {
 }
 
 gArr_Is(arr) {
-    return arr.MaxIndex() > 0
+    return IsObject(arr) && arr.HasKey("MaxIndex")
 }

@@ -26,14 +26,26 @@ gLang_Bool(bool, type := "TrueFalse") {
     }
 }
 
+__g_builtInNames:=["_NewEnum", "methods", "HasKey", "_ahkUtilsDisableVerification", "Clone", "GetAddress", "SetCapacity", "GetCapacity", "MinIndex", "MaxIndex", "Length", "Delete", "Push", "Pop", "InsertAt", "RemoveAt", "base", "__Set", "__Get", "__Call", "__New", "__Init", "_ahkUtilsIsInitialized"]
+
+gLang_IsNameBuiltIn(name) {
+    global __g_builtInNames
+    for i, x in __g_builtInNames {
+        if (x = name) {
+            return True
+        }
+    }
+    return False
+}
+
 ; Base class that provides member name verification services.
 ; Basically, inherit from this if you want your class to only have declared members (methods, properties, and fields assigned in the initializer), so that unrecognized keys will result in an error.
 ; The class implements __Get, __Call, and __Set.
 class gDeclaredMembersOnly {
     __Call(name, params*) {
         if (!gLang_IsNameBuiltIn(name) && !this._ahkUtilsDisableVerification) {
-            FancyEx.Throw("Tried to call undeclared method '" name "'.")
-        }
+            gEx_Throw("Tried to call undeclared method '" name "'.")
+        }        
     }
 
     __New() {
@@ -54,13 +66,13 @@ class gDeclaredMembersOnly {
 
     __Get(name) {
         if (!gLang_IsNameBuiltIn(name) && !this._ahkUtilsDisableVerification) {
-            FancyEx.Throw("Tried to get the value of undeclared member '" name "'.")
+            gEx_Throw("Tried to get the value of undeclared member '" name "'.")
         }
     }
 
     __Set(name, values*) {
         if (!gLang_IsNameBuiltIn(name) && !this._ahkUtilsDisableVerification) {
-            FancyEx.Throw("Tried to set the value of undeclared member '" name "'.")
+            gEx_Throw("Tried to set the value of undeclared member '" name "'.")
         }
     }
 
@@ -86,6 +98,16 @@ class gDeclaredMembersOnly {
     }
 
 }
+
+class ABC extends gDeclaredMembersOnly {
+    X(z) {
+
+    }
+}
+
+z := new ABC()
+
+z.X("A", "C")
 
 ; Class primarily for reference, demonstrating the fields FancyEx supports/cares about for exceptions.
 ; The Extra field is used internally and you shouldn't use it.
