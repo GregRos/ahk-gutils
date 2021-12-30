@@ -36,8 +36,10 @@ gWin_IsMouseCursorVisible() {
     return Result > 1
 }
 
-__g_MatchingInfoKeys := ["hiddenWindows", "hiddenText", "speed", "mode", "title", "text", "excludeTitle", "excludeText"]
+__g_MatchingInfoKeys := ["speed", "mode", "hiddenWindows", "hiddenText"]
+__g_QueryKeys := ["title", "text", "excludeTitle", "excludeText"]
 __g_MatchingInfoValidator := gObj_NewValidator("MatchingInfo", [], __g_MatchingInfoKeys)
+__g_QueryValidator := gObj_NewValidator("WinTitle", [], __g_QueryKeys)
 
 gWin_GetMatchingInfo() {
     return {hiddenWindows: A_DetectHiddenWindows, hiddenText: A_DetectHiddenText, speed: A_TitleMatchModeSpeed, mode: A_TitleMatchMode}
@@ -73,140 +75,195 @@ gWin_SetMatchingInfo(infoObj) {
     return modified ? old : False
 }
 
-gWin_GetId(query) {
-    __g_MatchingInfoValidator.Assert(query)
-    old := gWin_SetMatchingInfo(query)
-    try {
-        return WinExist(query.title, query.text, query.excludeTitle, query.excludeText)
-    } finally {
-        __g_maybeSetMatchingInfo(old)
+__g_WinGet(hwnd, subCommand) {
+    WinGet, v, % subCommand, ahk_id %hwnd%
+    return v
+}
+
+class gWinInfo extends gDeclaredMembersOnly {
+    hwnd := ""
+
+    __New(hwnd) {
+        this.hwnd := hwnd
     }
-}
 
-gWin_GetIds(query) {
-    return gWin_Get("List", query)
-}
+    _winTitle() {
+        return "ahk_id " this.hwnd
+    }
 
-gWin_Get(Cmd, query) {
-    __g_MatchingInfoValidator.Assert(query)
-    old := gWin_SetMatchingInfo(query)
-    try {
-        WinGet, v, % Cmd , % WinTitle, % WinText, % ExcludeTitle, % ExcludeText
-        if (Cmd = "list") {
-            arr := []
-            Loop, % v 
-            {
-                arr.push(v%A_Index%)
-            }
-            v := arr
+    _winGet(subCommand) {
+        WinGet, v, % subCommand, % this._winTitle()
+        return v
+    }
+
+    PID[] {
+        get {
+            return this._winGet("PID")
         }
-        Return v
-    } finally {
-        __g_maybeSetMatchingInfo(old)
+    }
+
+    ProcessName[] {
+        get {
+            return this._winGet("ProcessName")
+        }
+    }
+
+    ProcessPath[] {
+        get {
+            return this._winGet("ProcessPath")
+        }
+    }
+
+    Transparent[] {
+        get {
+            return this._winGet("Transparent")
+        }
+    }
+
+    TransColor[] {
+        get {
+            return this._winGet("TransColor")
+        }
+    }
+
+    Style[] {
+        get {
+            return this._winGet("Style")
+        }
+    }
+
+    ExStyle[] {
+        get {
+            return this._winGet("ExStyle")
+        }
+    }
+
+    MinMax[] {
+        get {
+            return this._winGet("MinMax")
+        }
+    }
+
+    Title[] {
+        get {
+            WinGetTitle, v, % this._winTitle()
+            return v
+        }
+    }
+
+    Class[] {
+        get {
+            WinGetClass, v, % this._winTitle()
+            return v
+        }
+    }
+
+    Pos[] {
+        get {
+            WinGetPos, X, Y, Width, Height, % this._winTitle()
+            return {X: X
+                ,Y: Y
+                ,Width:Width
+            ,Height:Height}
+        }
+    }
+
+    IsActive[] {
+        get {
+            return WinActive(this._winTitle())
+        }
+    }
+
+    Text[] {
+        get {
+            WinGetText, v, % this._winTitle()
+            return v
+        }
+    }
+
+    ID[] {
+        get {
+            return this.hwnd
+        }
+    }
+
+    Exists[] {
+        get {
+            return WinExist(this._winTitle()) > 0
+        }
+    }
+
+    Hide() {
+        WinHide, % this._winTitle()
+    }
+
+    Show() {
+        WinShow, % this._winTitle()
+    }
+
+    Kill() {
+        WinKill, % this._winTitle()
+    }
+
+    Maximize() {
+        WinMaximize, % this._winTitle()
+    }
+
+    Minimize() {
+        WinMinimize, % this._winTitle()
+    }
+
+    Move(X, Y, Width:= "", Height := "") {
+        WinMove, % this._winTitle(), , % X, % Y, % Width, % Height
+    }
+
+    Restore() {
+        WinRestore, % this._winTitle()
+    }
+
+    Set(subCommand, value := "") {
+        WinSet, % subCommand, % value, % this._winTitle()
+    }
+
+    Activate() {
+        WinActivate, % this._winTitle()
     }
 
 }
 
-__g_getId(hwnd) {
-    return "ahk_id " hwnd
+gWin_Get(query) {
+    __g_QueryValidator.Assert(query)
+    hwnd := WinExist(query.title, query.text, query.excludeTitle, query.excludeText)
+    return new gWinInfo(hwnd)
 }
 
-gWin_GetClass(hwnd) {
-    WinGetClass, v, % __g_getId(hwnd)
-    Return, v
-}
-
-gWin_GetText(hwnd) {
-    WinGetText, v, % __g_getId(hwnd)
-    Return, v
-}
-
-gWin_GetTitle(hwnd) {
-    WinGetTitle, v, % __g_getId(hwnd)
-    Return, v
-}
-
-gWin_GetPos(hwnd) {
-    WinGetPos, X, Y, Width, Height, % __g_getId(hwnd)
-    return {X: X
-        ,Y: Y
-        ,Width:Width
-    ,Height:Height}
-}
-
-gWin_Hide(hwnd) {
-    WinHide, % __g_getId(hwnd)
-}
-
-gWin_Kill(hwnd, SecondsToWait := "") {
-    WinKill, % __g_getId(hwnd), , % SecondsToWait
-}
-
-gWin_Maximize(hwnd) {
-    WinMaximize, % __g_getId(hwnd)
-}
-
-gWin_Minimize(hwnd) {
-    WinMinimize, % __g_getId(hwnd)
-}
-
-gWin_Move(hwnd, X, Y, Width := "", Height := "") {
-    WinMove, % __g_getId(hwnd), , % X, % Y, % Width, % Height
-}
-
-gWin_Restore(hwnd) {
-    WinRestore, % __g_getId(hwnd)
-}
-
-gWin_Set(hwnd, SubCommand, Value := "") {
-    WinSet, % SubCommand, % Value, % __g_getId(hwnd)
-}
-
-gWin_Show(hwnd) {
-    WinShow, % __g_getId(hwnd)
-}
-
-gWin_Activate(hwnd) {
-    WinActivate, % __g_getId(hwnd)
-}
-
-gWin_IsActive(hwnd) {
-    return !!WinActive(__g_getId(hwnd))
+gWin_List(query) {
+    __g_QueryValidator.Assert(query)
+    WinGet, win, List, % query.title, % query.text, % query.excludeTitle, % query.excludeText
+    arr := []
+    Loop, % win 
+    {
+        arr.push(win%A_Index%)
+    }
+    v := arr
 }
 
 gWin_Wait(query, timeout := "") {
-    __g_MatchingInfoValidator.Assert(query)
+    __g_QueryValidator.Assert(query)
     old := gWin_SetMatchingInfo(query)
-    try {
-        WinWait, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
-    } finally {
-        __g_maybeSetMatchingInfo(old)
-    }
-
+    WinWait, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
 }
 
 gWin_WaitActive(query, active := 1, timeout := "") {
-    __g_MatchingInfoValidator.Assert(query)
-    old := gWin_SetMatchingInfo(query)
-    try {
-        if (active) {
-            WinWaitActive, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
-        } else {
-            WinWaitNotActive, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
-        }
-    } finally {
-        __g_maybeSetMatchingInfo(old)
+    __g_QueryValidator.Assert(query)
+    if (active) {
+        WinWaitActive, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
+    } else {
+        WinWaitNotActive, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
     }
 }
 
 gWin_WaitClose(query, timeout := "") {
-    __g_MatchingInfoValidator.Assert(query)
-    old := gWin_SetMatchingInfo(query)
-    try {
-        WinWaitClose, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
-    } finally {
-        __g_maybeSetMatchingInfo(obj)
-    }
-    
+    __g_QueryValidator.Assert(query)
+    WinWaitClose, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
 }
-

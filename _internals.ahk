@@ -157,9 +157,10 @@ gLang_StackTraceObj(ignoreLast := 0) {
     return r
 }
 
-gLang_Out(ByRef out) {
+gOut(out) {
     OutputDebug, % out
 }
+
 
 gLang_Equal(a, b, case := False) {
     if (!case && a = b) {

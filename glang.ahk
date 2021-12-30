@@ -50,3 +50,7 @@ gLang_StackTrace(ignoreLast := 0) {
     return gStr_Join(stringify, "`n")
 }
 
+gLang_Is(ByRef what, type) {
+    if what is %type%
+        Return true
+}

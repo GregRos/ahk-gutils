@@ -17,6 +17,10 @@ gArr_IndexOf(arr, what) {
     return 0	
 }
 
+gArr_Has(arr, what) {
+    return gArr_IndexOf(arr, what) > 0
+}
+
 gArr_Find(arr, func) {
     func := gLang_NormFunc(func)
     return gArr_Filter(arr, func)[1]

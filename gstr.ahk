@@ -81,6 +81,9 @@ gStr(ByRef obj) {
 
 gStr_Join(ByRef what, sep:="", omit:="") {
     for ix, value in what {
+        if (!gStr_Is(value)) {
+            value := gStr_Join(value, sep, omit)
+        }
         if (A_Index != 1) {
             res .= sep
         }
@@ -118,6 +121,19 @@ gStr_Repeat(ByRef what, count, delim := "") {
     return result
 }
 
+gStr_IndexesOf(ByRef where, ByRef what, case := false) {
+    arr := []
+    occur := 1
+    last := ""
+    Loop {
+        if (last != "") {
+            arr.Push(last)
+        }
+        last := gStr_IndexOf(where, what, case, A_Index)
+    } until last = 0
+    return arr
+}
+
 gStr_IndexOf(ByRef where, ByRef what, case := false, pos := 1, occurrence := 1) {
     return InStr(where, what, case, pos, occurrence)
 }
@@ -143,8 +159,8 @@ gStr_Slice(ByRef where, start := 1, end := 0) {
     return SubStr(where, start, end - start + 1)
 }
 
-gStr_Split(ByRef what, delimeters := "", omit := "", max := 0) {
-    return StrSplit(what, delimeters, omit, max)
+gStr_Split(what, delimeters := "", omit := "", max := 0) {
+    return StrSplit(what, delimeters, omit)
 }
 
 gStr_FromCodeArray(wArray) {
@@ -196,8 +212,14 @@ gStr_Replace(ByRef InputVar, ByRef SearchText, ByRef ReplaceText, Limit := -1) {
     return StrReplace(InputVar, SearchText, ReplaceText, , Limit)
 }
 
-gStr_Contains(ByRef where, ByRef what, Case := false, Start := 1) {
+gStr_Has(ByRef where, ByRef what, Case := false, Start := 1) {
     return gStr_IndexOf(where, what, Case, Start) > 0
 }
 
+gStr_Is(ByRef what) {
+    return !IsObject(what)
+}
 
+gStr_At(ByRef what, pos) {
+    return SubStr(what, pos, 1)
+}
