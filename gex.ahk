@@ -1,34 +1,4 @@
-; Class primarily for reference, demonstrating the fields FancyEx supports/cares about for exceptions.
-; The Extra field is used internally and you shouldn't use it.
-; Any additional fields are also printed, using 
-class FancyException {
-    __New(type, message, innerEx := "", data := "") {
-        this.Message := message
-        this.InnerException := innerEx
-        this.Data := data
-        this.Type := type
-    }
-}
-
-; Constructs a new exception with the specified arguments, and throws it. 
-; ignoreLastInTrace - don't show the last N callers in the stack trace. Note that FancyEx methods don't appear.
-gEx_Throw(message := "An exception has been thrown.", innerException := "", type := "Unspecified", data := "", ignoreLastInTrace := 0) {
-    gEx_ThrowObj(new FancyException(type, message, innerException, data), ignoreLastInTrace + 1)
-}
-
-gEx_ThrowObj(ex, ignoreLastInTrace := 0) {
-    if (!IsObject(ex)) {
-        gEx_Throw(ex, , , , ignoreLastInTrace + 1) 
-        return
-    }
-    ex.StackTrace := gLang_StackTrace(ignoreLastInTrace + 1)
-    ex.What := ex.StackTrace[1].Function
-    ex.Offset := ex.StackTrace[1].Offset
-    ; We're planting a GUID inside the exception to identify its unhandled exception message box later on.
-    ex.InstanceGuid := gSys_GetGuid()
-    ex.Line := ex.StackTrace[1].Line
-    Throw ex
-}
+#include _internals.ahk
 
 gEx_Print(ex) {
     msg:=ex.Message, type:=ex.Type
@@ -154,5 +124,5 @@ gEx_Print(ex) {
     }
 
     gEx_FancyInit() {
-        OnError(__g_openExceptionGuiFor)
+        OnError(Func("__g_openExceptionGuiFor"))
     }

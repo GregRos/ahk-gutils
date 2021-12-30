@@ -101,3 +101,7 @@ gArr_FindLastIndex(arr, filter) {
     arr := gArr_FindIndexes(arr, filter)
     return arr[arr.MaxIndex()]
 }
+
+gArr_Is(arr) {
+    return arr.MaxIndex() > 0
+}

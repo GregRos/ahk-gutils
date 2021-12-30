@@ -58,22 +58,7 @@ gAssert_False(real) {
 }
 
 gAssert_Eq(real, expected) {
-    success := true
-    if (IsObject(real)) {
-        if (real.MaxIndex()) {
-            success := expected.MaxIndex() == real.MaxIndex()
-            for index, value in real {
-                success := value = expected[index]
-                if (!success) {
-                    break
-                }
-            }
-        } else {
-            success := false
-        }
-    } else {
-        success := real == expected
-    }
+    success := gLang_Equal(real, expected)
     __g_ReportAssert(success, real)
 }
 

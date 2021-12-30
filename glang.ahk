@@ -50,35 +50,3 @@ gLang_StackTrace(ignoreLast := 0) {
     return gStr_Join(stringify, "`n")
 }
 
-gLang_StackTraceObj(ignoreLast := 0) {
-    ; from Coco in http://ahkscript.org/boards/viewtopic.php?f=6&t=6001
-    r := [], i := 0, n := 0
-    Loop
-    {
-        e := Exception(".", offset := -(A_Index + n))
-        if (e.What == offset)
-            break
-        r[++i] := new StackTraceEntry(e.File, e.Line, e.What, offset + n)
-    }
-    lastEntry:= r[1]
-    for ix, entry in r {
-        ; I want each entry to contain the *exit location*, not entry location, so it corresponds to part of the function.
-        if (ix = 1) {
-            continue	
-        }
-        tmp := lastEntry
-        lastEntry := entry.Clone()
-        entry.File := tmp.File
-        entry.Line := tmp.Line
-        entry.Offset := tmp.Offset
-    }
-
-    r.Insert(new StackTraceEntry(lastEntry.File, lastEntry.Line, " ", lastEntry.Offset))
-
-    Loop, % ignoreLast + 1
-    {
-        r.Remove(1)
-    }
-
-    return r
-}
