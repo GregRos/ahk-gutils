@@ -99,16 +99,6 @@ class gDeclaredMembersOnly {
 
 }
 
-class ABC extends gDeclaredMembersOnly {
-    X(z) {
-
-    }
-}
-
-z := new ABC()
-
-z.X("A", "C")
-
 ; Class primarily for reference, demonstrating the fields FancyEx supports/cares about for exceptions.
 ; The Extra field is used internally and you shouldn't use it.
 ; Any additional fields are also printed, using 
