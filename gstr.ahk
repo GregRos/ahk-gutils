@@ -157,6 +157,13 @@ gStr_LastIndexOf(ByRef where, ByRef what, case := false, pos := 1) {
     return last
 }
 
+gStr_SplitAt(ByRef where, pos) {
+    pos := __g_NormalizeIndex(pos, StrLen(where))
+    first := gStr_Slice(where, pos - 1)
+    last := gStr_Slice(where, pos + 1)
+    return [first, last]
+}
+
 gStr_Slice(ByRef where, start := 1, end := 0) {
     start := __g_NormalizeIndex(start, StrLen(where))
     end := __g_NormalizeIndex(end, StrLen(where))
@@ -164,7 +171,7 @@ gStr_Slice(ByRef where, start := 1, end := 0) {
 }
 
 gStr_Split(what, delimeters := "", omit := "", max := 0) {
-    return StrSplit(what, delimeters, omit)
+    return StrSplit(what, delimeters, omit, max)
 }
 
 gStr_FromCodeArray(wArray) {
@@ -242,4 +249,3 @@ gStr_Matches(haystack, needle, options := "", pos := 1) {
     }
     Return array
 }
-

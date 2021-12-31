@@ -12,6 +12,7 @@
 #include gwin.ahk
 #include gsys.ahk
 #include greg.ahk
+#include gpath.ahk
 ; #include greg.ahk
 
 

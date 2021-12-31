@@ -110,4 +110,23 @@ gArr_Is(arr) {
     return IsObject(arr) && arr.MaxIndex() != ""
 }
 
+gArr_Reverse(arr) {
+    newArr := []
+    Loop, % arr.MaxIndex()
+    {
+        newArr.Push(arr[arr.MaxIndex() - A_Index + 1])
+    }
+    return newArr
+}
 
+gArr_Flatten(arr) {
+    total := []
+    for i, item in arr {
+        if (gArr_Is(item)) {
+            total.Push(gArr_Flatten(item))
+        } else {
+            total.Push(item)
+        }
+    }
+    return total
+}
