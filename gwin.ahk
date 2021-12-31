@@ -231,8 +231,13 @@ class gWinInfo extends gDeclaredMembersOnly {
 
 gWin_Get(query) {
     __g_MatchingInfoValidator.Assert(query)
-    hwnd := WinExist(query.title, query.text, query.excludeTitle, query.excludeText)
-    return new gWinInfo(hwnd)
+    old := gWin_SetMatchingInfo(query)
+    try {
+        hwnd := WinExist(query.title, query.text, query.excludeTitle, query.excludeText)
+        return new gWinInfo(hwnd)
+    } finally {
+        __g_maybeSetMatchingInfo(old)
+    }
 }
 
 gWin_List(query) {
@@ -279,5 +284,5 @@ gWin_WaitClose(query, timeout := "") {
     } finally {
         __g_maybeSetMatchingInfo(obj)
     }
-    
+
 }

@@ -162,3 +162,18 @@ gSys_CurrentPid() {
     return DllCall("GetCurrentProcessId")	
 }
 
+global __g_wmi := ComObjGet("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2") 
+
+gSys_GetCurrentParentProcess() {
+    return gSys_GetParentProcessId(gSys_CurrentPid())
+}
+
+gSys_GetParentProcessId(pid) {
+    query = Select ParentProcessId From Win32_Process where ProcessId = %pid%
+    results := __g_wmi.ExecQuery(query)._NewEnum()
+    while results[proc]
+    {
+        return proc.ParentProcessId
+    }
+}
+
