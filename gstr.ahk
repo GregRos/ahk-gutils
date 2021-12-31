@@ -64,11 +64,11 @@ gStr_EndsWith(ByRef where, ByRef what, caseSensitive = 0) {
     return caseSensitive ? final == what : final = what
 }
 
-gStr(ByRef obj) {
+gStr(obj) {
     if (!IsObject(obj)) {
         return "" + obj
     }
-    if (obj.MaxIndex()) {
+    if (obj.MaxIndex() != "") {
         stringified := gArr_Map(obj, "gStr")
         return "[" gStr_Join(stringified, ", ") "]"
     }
@@ -152,8 +152,8 @@ gStr_LastIndexOf(ByRef where, ByRef what, case := false, pos := 1) {
     cur := 0
     loop {
         last := cur
-        cur := gStr_IndexOf(where, what, case, cur)
-    } until !cur
+        cur := gStr_IndexOf(where, what, case, cur + 1)
+    } until cur = 0
     return last
 }
 

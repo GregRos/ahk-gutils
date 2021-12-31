@@ -11,7 +11,7 @@ global __g_rootKeyNormalizer := {"HKLM" : "HKEY_LOCAL_MACHINE"
 ,"HPD": "HKEY_PERFORMANCE_DATA"}
 
 for key, v in __g_rootKeyNormalizer {
-    __g_rootKeyNormalizer[v] = v
+    __g_rootKeyNormalizer[v] := v
 }
 
 class gRegEntry extends gDeclaredMembersOnly {
@@ -108,7 +108,7 @@ class gRegEntry extends gDeclaredMembersOnly {
         return ""
     }
 
-    GetValue(value) {
+    GetValue(value := "") {
         if (!this.IsKey) {
             gEx_Throw("Cannot GetValue from a value.")
         }

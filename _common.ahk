@@ -58,7 +58,6 @@ class gDeclaredMembersOnly {
             return
         }
         this._ahkUtilsDisableVerification := true
-        this.methods := { }
 
         this.__Init()
         this.Delete("_ahkUtilsDisableVerification")
@@ -163,7 +162,7 @@ gLang_StackTraceObj(ignoreLast := 0) {
 }
 
 gOut(out) {
-    OutputDebug, % out
+    OutputDebug, % gStr(Out)
 }
 
 
