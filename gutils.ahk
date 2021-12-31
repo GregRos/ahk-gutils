@@ -11,7 +11,7 @@
 #include gstr.ahk
 #include gwin.ahk
 #include gsys.ahk
-
+#include greg.ahk
 ; #include greg.ahk
 
 

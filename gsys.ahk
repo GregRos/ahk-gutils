@@ -150,7 +150,6 @@ class gProcessView extends gDeclaredMembersOnly {
     }
 }
 
-
 gSys_ProcessView(winTitle) {
     return new gProcessView(winTitle)
 }
@@ -162,3 +161,4 @@ gSys_ComInvoker(ref, dependencies := "") {
 gSys_CurrentPid() {
     return DllCall("GetCurrentProcessId")	
 }
+

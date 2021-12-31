@@ -4,25 +4,21 @@ __g_parentKeyPath(key) {
     return initialPath
 }
 
-__g_rootKeyNormalizer := {"HKLM" : "HKEY_LOCAL_MACHINE", 
-"HKCR": "HKEY_CLASSES_ROOT",
-"HKU": "HKEY_USERS",
-"HKCU" : "HKEY_CURRENT_USER",
-"HPD": "HKEY_PERFORMANCE_DATA"}
+global __g_rootKeyNormalizer := {"HKLM" : "HKEY_LOCAL_MACHINE"
+,"HKCR": "HKEY_CLASSES_ROOT"
+,"HKU": "HKEY_USERS"
+,"HKCU" : "HKEY_CURRENT_USER"
+,"HPD": "HKEY_PERFORMANCE_DATA"}
 
 for key, v in __g_rootKeyNormalizer {
     __g_rootKeyNormalizer[v] = v
 }
 
-__g_normalizeRoot(key) {
-    global __g_rootKeyNormalizer
-    for key, v in 
-}
-
 class gRegEntry extends gDeclaredMembersOnly {
     name := ""
     type := ""
-    key := ""
+    root := ""
+    subkey := ""
     modified := ""
     IsKey[] {
         get {
@@ -33,8 +29,10 @@ class gRegEntry extends gDeclaredMembersOnly {
     __New(name, type, key, modified := "") {
         this.name := name
         this.type := type
-        this.key := key
-        this.modifier := modifier
+        parsed := gStr_Split(key, "\", , 2)
+        this.root := __g_rootKeyNormalizer[parsed[1]]
+        this.subkey := parsed[2]
+        this.modified := modified
     }
 
     _normalizeSubkey(otherKey) {
@@ -48,15 +46,9 @@ class gRegEntry extends gDeclaredMembersOnly {
         }
     }
 
-    Root[] {
+    Key[] {
         get {
-            return gStr_Split(this.key, "\", "", 2)[1]
-        }
-    }
-
-    Subkey[] {
-        get {
-            return gStr_Split(this.key, "\", "", 2)[2]
+            return this.root "\" this.subkey
         }
     }
 
@@ -134,7 +126,7 @@ class gRegEntry extends gDeclaredMembersOnly {
         {
             return true
         }
-        return this.Parent().HasSubkey(this.key)
+        return !!this.Parent().GetSubkey(this.key)
     }
 
     List(mode := "") {
@@ -161,7 +153,7 @@ class gRegEntry extends gDeclaredMembersOnly {
 gReg(key, valueName := "") {
     entry := new gRegEntry("", "KEY", key)
     if (!entry.Exists()) {
-        gEx_Throw("Registry key not found.")
+        gEx_Throw(Format("Registry key {1} not found.", key))
     }
     if (valueName) {
         return entry.GetValue(valueName)

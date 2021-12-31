@@ -149,8 +149,12 @@ gStr_Reverse(ByRef what) {
 }
 
 gStr_LastIndexOf(ByRef where, ByRef what, case := false, pos := 1) {
-    reverse := gStr_Reverse(where)
-    return StrLen(where) - gStR_IndexOf(where, what, case, pos) + 1
+    cur := 0
+    loop {
+        last := cur
+        cur := gStr_IndexOf(where, what, case, cur)
+    } until !cur
+    return last
 }
 
 gStr_Slice(ByRef where, start := 1, end := 0) {

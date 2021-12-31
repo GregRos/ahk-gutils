@@ -107,5 +107,7 @@ gArr_FindLastIndex(arr, filter) {
 }
 
 gArr_Is(arr) {
-    return IsObject(arr) && arr.HasKey("MaxIndex")
+    return IsObject(arr) && arr.MaxIndex() != ""
 }
+
+

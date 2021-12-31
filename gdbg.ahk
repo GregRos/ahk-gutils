@@ -6,5 +6,5 @@ __g_UnknownMethod(nonobj, p1="", p2="", p3="", p4="") {
     if (p1 = "MaxIndex") {
         return
     }
-    gEx_Throw(Format("Tried to treat value '{0}' as an object.", nonobj))
+    gEx_Throw(Format("Tried to treat value '{1}' as an object.", nonobj))
 }

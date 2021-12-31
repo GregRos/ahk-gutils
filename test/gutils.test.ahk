@@ -69,5 +69,6 @@ gAssert_Has(win.Title, "Visual Studio Code")
 gAssert_Has(win.ProcessPath, "\code.exe")
 gAssert_Eq(win.MinMax, 1)
 gAssert_Eq(win.Class, "Chrome_WidgetWin_1")
+gAssert_Eq(gReg("HKEY_CLASSES_ROOT\.dll"), "")
 
 ExitApp

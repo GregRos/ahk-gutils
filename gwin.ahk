@@ -36,10 +36,8 @@ gWin_IsMouseCursorVisible() {
     return Result > 1
 }
 
-__g_MatchingInfoKeys := ["speed", "mode", "hiddenWindows", "hiddenText"]
-__g_QueryKeys := ["title", "text", "excludeTitle", "excludeText"]
+__g_MatchingInfoKeys := ["speed", "mode", "hiddenWindows", "hiddenText", "title", "text", "excludeTitle", "excludeText"]
 global __g_MatchingInfoValidator := gObj_NewValidator("MatchingInfo", [], __g_MatchingInfoKeys)
-global __g_QueryValidator := gObj_NewValidator("WinTitle", [], __g_QueryKeys)
 
 gWin_GetMatchingInfo() {
     return {hiddenWindows: A_DetectHiddenWindows, hiddenText: A_DetectHiddenText, speed: A_TitleMatchModeSpeed, mode: A_TitleMatchMode}
@@ -232,13 +230,13 @@ class gWinInfo extends gDeclaredMembersOnly {
 }
 
 gWin_Get(query) {
-    __g_QueryValidator.Assert(query)
+    __g_MatchingInfoValidator.Assert(query)
     hwnd := WinExist(query.title, query.text, query.excludeTitle, query.excludeText)
     return new gWinInfo(hwnd)
 }
 
 gWin_List(query) {
-    __g_QueryValidator.Assert(query)
+    __g_MatchingInfoValidator.Assert(query)
     WinGet, win, List, % query.title, % query.text, % query.excludeTitle, % query.excludeText
     arr := []
     Loop, % win 
@@ -249,21 +247,37 @@ gWin_List(query) {
 }
 
 gWin_Wait(query, timeout := "") {
-    __g_QueryValidator.Assert(query)
+    __g_MatchingInfoValidator.Assert(query)
     old := gWin_SetMatchingInfo(query)
-    WinWait, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
+    try {
+        WinWait, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
+    } finally {
+        __g_maybeSetMatchingInfo(old)
+    }
+
 }
 
 gWin_WaitActive(query, active := 1, timeout := "") {
-    __g_QueryValidator.Assert(query)
-    if (active) {
-        WinWaitActive, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
-    } else {
-        WinWaitNotActive, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
+    __g_MatchingInfoValidator.Assert(query)
+    old := gWin_SetMatchingInfo(query)
+    try {
+        if (active) {
+            WinWaitActive, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
+        } else {
+            WinWaitNotActive, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
+        }
+    } finally {
+        __g_maybeSetMatchingInfo(old)
     }
 }
 
 gWin_WaitClose(query, timeout := "") {
-    __g_QueryValidator.Assert(query)
-    WinWaitClose, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
+    __g_MatchingInfoValidator.Assert(query)
+    old := gWin_SetMatchingInfo(query)
+    try {
+        WinWaitClose, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
+    } finally {
+        __g_maybeSetMatchingInfo(obj)
+    }
+    
 }

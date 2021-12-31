@@ -129,13 +129,6 @@ gEx_ThrowObj(ex, ignoreLastInTrace := 0) {
     Throw ex
 }
 
-__g_IsWinQuery(name, obj) {
-    __g_isObject(name, obj)
-    if (!gObj_HasAnyKey(obj, "Title", "Text")) {
-        gex_Throw("Paramter " name " doesn't have any of the keys: Title, Text.")
-    }
-}
-
 gLang_StackTraceObj(ignoreLast := 0) {
     ; from Coco in http://ahkscript.org/boards/viewtopic.php?f=6&t=6001
     r := [], i := 0, n := 0
