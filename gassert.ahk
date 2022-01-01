@@ -133,13 +133,13 @@ gAssert_False(real) {
     __g_ReportAssert(!real || Trim(real) = "", real)
 }
 
-__g_assertFormats.gAssert_Eq = "{2} == {3}"
+__g_assertFormats.gAssert_Eq := "{2} == {3}"
 gAssert_Eq(real, expected) {
     success := gLang_Equal(real, expected)
     __g_ReportAssert(success, real)
 }
 
-__g_assertFormats.gAssert_Has := "{2} HAS {3}"}
+__g_assertFormats.gAssert_Has := "{2} HAS {3}"
 gAssert_Has(real, expectedToContain) {
     if (gArr_Is(real)) {
         success := gArr_Has(real, expectedToContain)

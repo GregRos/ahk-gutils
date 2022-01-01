@@ -22,13 +22,13 @@ gArr_Has(arr, what) {
 }
 
 gArr_Find(arr, func) {
-    func := gLang_NormFunc(func)
+    func := gLang_Func(func)
     return gArr_Filter(arr, func)[1]
 }
 
 gArr_FindIndexes(arr, func) {
     results := []
-    func := gLang_NormFunc(func)
+    func := gLang_Func(func)
     for index, item in arr {
         if (gLang_Call(func, item, index)) {
             results.push(index)
@@ -78,7 +78,7 @@ gArr_Slice(arr, start := 1, end := 0) {
 }
 
 gArr_Map(arr, projection) {
-    projection := gLang_NormFunc(projection)
+    projection := gLang_Func(projection)
     result := []
     for index, item in arr {
         result.Push(gLang_Call(projection, item, index))
@@ -91,7 +91,7 @@ gArr_Take(arr, n) {
 }
 
 gArr_Filter(arr, filter) {
-    filter := gLang_NormFunc(filter)
+    filter := gLang_Func(filter)
     result := []
     for index, item in arr {
         if (gLang_Call(filter, item, index)) {

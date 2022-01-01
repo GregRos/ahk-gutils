@@ -1,11 +1,9 @@
-
-
 gLang_VarExists(ByRef var) {
     return &var = &something ? 0 : var = "" ? 2 : 1 
 }
 
 
-gLang_NormFunc(funcOrName) {
+gLang_Func(funcOrName) {
     if (IsObject(funcOrName)) {
         return funcOrName
     }
@@ -17,7 +15,7 @@ gLang_NormFunc(funcOrName) {
 }
 
 gLang_Call(funcOrName, args*) {
-    funcOrName := gLang_NormFunc(funcOrName)
+    funcOrName := gLang_Func(funcOrName)
     if (funcOrName.MinParams > args.MaxIndex()) {
         Throw "Passed too few parameters for function."
     }

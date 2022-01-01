@@ -231,3 +231,7 @@ gReg(key) {
     parsed := __g_splitRegPath(key)
     return new gRegKey(parsed[1], parsed[2])
 }
+
+gReg_Is(obj) {
+    return obj.base = gRegKey
+}
