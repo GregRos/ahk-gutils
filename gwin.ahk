@@ -234,6 +234,9 @@ gWin_Get(query) {
     old := gWin_SetMatchingInfo(query)
     try {
         hwnd := WinExist(query.title, query.text, query.excludeTitle, query.excludeText)
+        if (hwnd = 0) {
+            return ""
+        }
         return new gWinInfo(hwnd)
     } finally {
         __g_maybeSetMatchingInfo(old)
