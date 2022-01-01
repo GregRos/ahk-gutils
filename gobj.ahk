@@ -105,3 +105,22 @@ gObj_Omit(obj, keys*) {
     }
     return result
 }
+
+gObj_Assign(target, sources*) {
+    for i, source in sources {
+        for k, v in source {
+            target[k] = source[v]
+        }
+    }
+}
+
+gObj_Defaults(target, sources*) {
+    sources := gArr_Reverse(sources)
+    sources.Push(target)
+    obj := gObj_Assign({}, sources*)
+    return obj
+}
+
+gObj_Merge(sources*) {
+    return gObj_Assign({}, sources*)
+}

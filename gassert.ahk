@@ -3,8 +3,6 @@ __g_AssertLastFrame(entry) {
     return InStr(entry.Function, "gAssert")
 }
 
-global __g_openParen := ["[", "(", "{"]
-global __g_closeParen := ["]", ")", "}"]
 __g_ParseParens(ByRef str, ByRef pos, outerParen := "") {
     arr := []
     cur := outerParen
@@ -13,7 +11,7 @@ __g_ParseParens(ByRef str, ByRef pos, outerParen := "") {
     while (pos <= StrLen(str)){
         char := gSTr_At(str, pos)
         pos += 1
-        if (gArr_Has(__g_openParen, char)) {
+        if (gArr_Has(["[", "(", "{"], char)) {
             if (cur) {
                 results.Push(cur)
             }
@@ -21,7 +19,7 @@ __g_ParseParens(ByRef str, ByRef pos, outerParen := "") {
             result := __g_ParseParens(str, pos, char)
             results.Push(result)
         }
-        else if (gArr_Has(__g_closeParen, char)) {
+        else if (gArr_Has(["]", ")", "}"], char)) {
             cur .= char
             if (cur) {
                 results.Push(cur)
@@ -37,11 +35,11 @@ __g_ParseParens(ByRef str, ByRef pos, outerParen := "") {
     return results
 }
 
-__g_recParen(what) {
+__g_flattenParenBlock(what) {
     if (gStr_Is(what)) {
         return what
     }
-    return gStr_Join(gArr_Map(what, "__g_recParen"), "")
+    return gStr_Join(gArr_Map(what, "__g_flattenParenBlock"), "")
 }
 
 __g_TrimParens(x) {
@@ -52,14 +50,14 @@ __g_nonEmpty(x) {
     return !!x
 }
 
-__g_reparse(what) {
+__g_interpertAsFunctionCall(what) {
     fName := what[1]
     args := what[2]
     realArgs := []
     curArg := ""
     for i, arg in args {
         if (gArr_Is(arg)) {
-            curArg .= __g_recParen(arg)
+            curArg .= __g_flattenParenBlock(arg)
             continue
         }
         parts := gStr_Split(arg, ",")
@@ -79,24 +77,12 @@ __g_reparse(what) {
     if (curArg) {
         realArgs.Push(curArg)
     }
-    realArgs := gArr_Map(realArgs, "__g_TrimParens")
     realArgs[1] := gStr_TrimLeft(realArgs[1], "(")
     realArgs[realArgs.MaxIndex()] := gStr_TrimRight(realArgs[realArgs.MaxIndex()], ")")
     realArgs.InsertAt(1, fName)
+    realArgs := gArr_Map(realArgs, "__g_TrimParens")
     realArgs := gArr_Filter(realArgs, "__g_nonEmpty")
     return realArgs
-}
-
-
-
-__g_splitByTopmostArgs(parsed) {
-    args := []
-    curArg := ""
-    for i, v in parsed {
-        if (gArr_Is(v)) {
-
-        }
-    }
 }
 
 __g_AssertGetArgs() {
@@ -109,17 +95,13 @@ __g_AssertGetArgs() {
     params := gStr_Repeat(",([^\)]*)", groups - 1)
     pos := 1
     parsed := __g_ParseParens(outVar, pos)
-    unparsed := __g_reparse(parsed)
+    unparsed := __g_interpertAsFunctionCall(parsed)
     return unparsed
 }
 
-__g_ReportAssert(success, actual) {
-    assertFormats := {gAssert_Eq: "{2} == {3}"
-        , gAssert_Gtr: "{2} > {3}"
-        , gAssert_True: "{2}"
-        , gAssert_False: "NOT {2}"
-    , gAssert_Has: "{2} HAS {3}"}
+global __g_assertFormats := {}
 
+__g_ReportAssert(success, actual) {
     assertLine := ""
     if (success) {
         assertLine .= "✅ "
@@ -128,7 +110,7 @@ __g_ReportAssert(success, actual) {
     }
 
     args := __g_AssertGetArgs()
-    format := assertFormats[args[1]]
+    format := __g_assertFormats[args[1]]
     if (!format) {
         Throw "You need to set a format for " args[1]
     }
@@ -141,19 +123,23 @@ __g_ReportAssert(success, actual) {
     OutputDebug, % assertLine
 }
 
+__g_assertFormats.gAssert_True := "{2}"
 gAssert_True(real) {
     __g_ReportAssert(real || Trim(real) != "", real)
 }
 
+__g_assertFormats.gAssert_False := "NOT {2}"
 gAssert_False(real) {
     __g_ReportAssert(!real || Trim(real) = "", real)
 }
 
+__g_assertFormats.gAssert_Eq = "{2} == {3}"
 gAssert_Eq(real, expected) {
     success := gLang_Equal(real, expected)
     __g_ReportAssert(success, real)
 }
 
+__g_assertFormats.gAssert_Has := "{2} HAS {3}"}
 gAssert_Has(real, expectedToContain) {
     if (gArr_Is(real)) {
         success := gArr_Has(real, expectedToContain)
@@ -165,7 +151,7 @@ gAssert_Has(real, expectedToContain) {
     __g_ReportAssert(success, real)
 
 }
-
+__g_assertFormats.gAssert_Gtr := "{2} > {3}"
 gAssert_Gtr(real, expected) {
     __g_ReportAssert(real > expected, real)
 }

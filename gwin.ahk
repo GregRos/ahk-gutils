@@ -94,69 +94,69 @@ class gWinInfo extends gDeclaredMembersOnly {
         return v
     }
 
-    PID[] {
+    PID {
         get {
             return this._winGet("PID")
         }
     }
 
-    ProcessName[] {
+    ProcessName {
         get {
             return this._winGet("ProcessName")
         }
     }
 
-    ProcessPath[] {
+    ProcessPath {
         get {
             return this._winGet("ProcessPath")
         }
     }
 
-    Transparent[] {
+    Transparent {
         get {
             return this._winGet("Transparent")
         }
     }
 
-    TransColor[] {
+    TransColor {
         get {
             return this._winGet("TransColor")
         }
     }
 
-    Style[] {
+    Style {
         get {
             return this._winGet("Style")
         }
     }
 
-    ExStyle[] {
+    ExStyle {
         get {
             return this._winGet("ExStyle")
         }
     }
 
-    MinMax[] {
+    MinMax {
         get {
             return this._winGet("MinMax")
         }
     }
 
-    Title[] {
+    Title {
         get {
             WinGetTitle, v, % this._winTitle()
             return v
         }
     }
 
-    Class[] {
+    Class {
         get {
             WinGetClass, v, % this._winTitle()
             return v
         }
     }
 
-    Pos[] {
+    Pos {
         get {
             WinGetPos, X, Y, Width, Height, % this._winTitle()
             return {X: X
@@ -166,26 +166,26 @@ class gWinInfo extends gDeclaredMembersOnly {
         }
     }
 
-    IsActive[] {
+    IsActive {
         get {
             return WinActive(this._winTitle())
         }
     }
 
-    Text[] {
+    Text {
         get {
             WinGetText, v, % this._winTitle()
             return v
         }
     }
 
-    ID[] {
+    ID {
         get {
             return this.hwnd
         }
     }
 
-    Exists[] {
+    Exists {
         get {
             return WinExist(this._winTitle()) > 0
         }

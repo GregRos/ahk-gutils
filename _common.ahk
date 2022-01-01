@@ -26,10 +26,12 @@ gLang_Bool(bool, type := "TrueFalse") {
     }
 }
 
-__g_builtInNames:=["_NewEnum", "methods", "HasKey", "_ahkUtilsDisableVerification", "Clone", "GetAddress", "SetCapacity", "GetCapacity", "MinIndex", "MaxIndex", "Length", "Delete", "Push", "Pop", "InsertAt", "RemoveAt", "base", "__Set", "__Get", "__Call", "__New", "__Init", "_ahkUtilsIsInitialized"]
 
 gLang_IsNameBuiltIn(name) {
-    global __g_builtInNames
+    static __g_builtInNames
+    if (!__g_builtInNames) {
+        __g_builtInNames:=["_NewEnum", "methods", "HasKey", "_ahkUtilsDisableVerification", "Clone", "GetAddress", "SetCapacity", "GetCapacity", "MinIndex", "MaxIndex", "Length", "Delete", "Push", "Pop", "InsertAt", "RemoveAt", "base", "__Set", "__Get", "__Call", "__New", "__Init", "_ahkUtilsIsInitialized"]
+    }
     for i, x in __g_builtInNames {
         if (x = name) {
             return True

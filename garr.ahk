@@ -123,7 +123,7 @@ gArr_Flatten(arr) {
     total := []
     for i, item in arr {
         if (gArr_Is(item)) {
-            total.Push(gArr_Flatten(item))
+            total.Push(gArr_Flatten(item)*)
         } else {
             total.Push(item)
         }
