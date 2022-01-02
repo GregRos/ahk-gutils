@@ -1,6 +1,4 @@
 #include _common.ahk
-
-#include _common.ahk
 #include garr.ahk
 #include json.ahk
 __g_setupNonObjectCheck() {
@@ -11,7 +9,6 @@ __g_setupNonObjectCheck() {
 }
 global __g_curEx := ""
 global __g_vsCodeProcess := ""
-__g_setupNonObjectCheck()
 __g_UnknownGet(nonobj, name) {
     gEx_Throw(Format("Tried to get property '{1}' from non-object value '{2}',", name, nonobj))
 }
@@ -132,5 +129,8 @@ __g_openExceptionGuiFor(ex) {
     Gui, __g_errorErrorBox: Show, w477 h505
 }
 
-__g_detectVsCode()
-OnError(Func("__g_openExceptionGuiFor"))
+gOops_Setup() {
+    __g_setupNonObjectCheck()
+    __g_detectVsCode()
+    OnError(Func("__g_openExceptionGuiFor"))
+}

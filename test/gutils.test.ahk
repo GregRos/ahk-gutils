@@ -2,10 +2,8 @@
 SendMode Input
 SetWorkingDir, %A_ScriptDir%
 #NoEnv
-RunWait, "python build/main.py"
 #include ..\
 #include gutils.ahk
-#include goptional.ahk
 
 __g_findGreater5(x) {
     return x > 5

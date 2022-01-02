@@ -1,4 +1,6 @@
-﻿#include gutils.ahk
+﻿#include garr.ahk
+#include gstr.ahk
+
 __g_AssertLastFrame(entry) {
     return InStr(entry.Function, "gAssert")
 }

@@ -1,3 +1,16 @@
+gArr_Slice(arr, start := 1, end := 0) {
+    result:=[]
+    start:= __g_NormalizeIndex(start, arr.MaxIndex())
+    end:= __g_NormalizeIndex(end, arr.MaxIndex())
+    if (end < start) {
+        return result
+    }
+    Loop, % end - start + 1
+    {
+        result.Insert(arr[start + A_Index - 1])
+    }
+    return result
+}
 gLang_VarExists(ByRef var) {
     return &var = &something ? 0 : var = "" ? 2 : 1 
 }
@@ -20,7 +33,8 @@ gLang_Call(funcOrName, args*) {
     }
     maxParams := funcOrName.MaxParams
     if (maxParams < args.MaxIndex()) {
-        args := gArr_Take(args, maxParams)
+        
+        args := gArr_Slice(args, maxParams)
     }
     return funcOrName.Call(args*)
 }
