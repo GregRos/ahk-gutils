@@ -1,6 +1,6 @@
 ﻿#include glang.ahk
 #include garr.ahk
-__g_isObject(name, obj, canBeArray := False) {
+z__gutils_isObject(name, obj, canBeArray := False) {
     if (!isObject(obj)) {
         gEx_Throw("Parameter " name " is not an object: " obj)
     }
@@ -16,7 +16,7 @@ gObj_Is(obj) {
 }
 
 gObj_HasAnyKey(obj, keys*) {
-    __g_isObject("obj", obj, True)
+    z__gutils_isObject("obj", obj, True)
     for i, k in keys {
         if (obj.HasKey(k)) {
             return True
@@ -26,7 +26,7 @@ gObj_HasAnyKey(obj, keys*) {
 }
 
 gObj_Keys(obj) {
-    __g_isObject("obj", obj, True)
+    z__gutils_isObject("obj", obj, True)
     keys := []
     for k in obj {
         keys.Push(k)

@@ -2,17 +2,17 @@
 #include gstr.ahk
 #include glang.ahk
 
-global __g_assertResults = {fail: 0, pass: 0}
+global z__gutils_assertResults = {fail: 0, pass: 0}
 
-__g_assertOut(line) {
+z__gutils_assertOut(line) {
     e := Chr("0x001b")
     line := gStr_Replace(line, "\e", e)
 
     FileAppend, % "`r`n" line , *, UTF-8
 }
-__g_reportAssertionResults(z := "") {
-    fail := __g_assertResults.fail
-    pass := __g_assertResults.pass
+z__gutils_reportAssertionResults(z := "") {
+    fail := z__gutils_assertResults.fail
+    pass := z__gutils_assertResults.pass
     line := gStr_Repeat("═", 50)
     len1 := gStr_Repeat(" ", 7)
     len2 := gStr_Repeat(" ", 13)
@@ -29,15 +29,15 @@ __g_reportAssertionResults(z := "") {
                 lines.Push(line)
             }
 
-            __g_AssertOut(gStr_Join(lines, "`r`n"))
+            z__gutils_AssertOut(gStr_Join(lines, "`r`n"))
 
         }
 
-        __g_AssertLastFrame(entry) {
+        z__gutils_AssertLastFrame(entry) {
             return InStr(entry.Function, "gAssert")
         }
 
-        __g_ParseParens(ByRef str, ByRef pos, outerParen := "") {
+        z__gutils_ParseParens(ByRef str, ByRef pos, outerParen := "") {
             arr := []
             cur := outerParen
             results := []
@@ -50,7 +50,7 @@ __g_reportAssertionResults(z := "") {
                         results.Push(cur)
                     }
                     cur := ""
-                    result := __g_ParseParens(str, pos, char)
+                    result := z__gutils_ParseParens(str, pos, char)
                     results.Push(result)
                 }
                 else if (gArr_Has(["]", ")", "}"], char)) {
@@ -69,29 +69,29 @@ __g_reportAssertionResults(z := "") {
             return results
         }
 
-        __g_flattenParenBlock(what) {
+        z__gutils_flattenParenBlock(what) {
             if (gStr_Is(what)) {
                 return what
             }
-            return gStr_Join(gArr_Map(what, "__g_flattenParenBlock"), "")
+            return gStr_Join(gArr_Map(what, "z__gutils_flattenParenBlock"), "")
         }
 
-        __g_TrimParens(x) {
+        z__gutils_TrimParens(x) {
             return Trim(x)
         }
 
-        __g_nonEmpty(x) {
+        z__gutils_nonEmpty(x) {
             return !!x
         }
 
-        __g_interpertAsFunctionCall(what) {
+        z__gutils_interpertAsFunctionCall(what) {
             fName := what[1]
             args := what[2]
             realArgs := []
             curArg := ""
             for i, arg in args {
                 if (gArr_Is(arg)) {
-                    curArg .= __g_flattenParenBlock(arg)
+                    curArg .= z__gutils_flattenParenBlock(arg)
                     continue
                 }
                 parts := gStr_Split(arg, ",")
@@ -114,43 +114,43 @@ __g_reportAssertionResults(z := "") {
             realArgs[1] := gStr_TrimLeft(realArgs[1], "(")
             realArgs[realArgs.MaxIndex()] := gStr_TrimRight(realArgs[realArgs.MaxIndex()], ")")
             realArgs.InsertAt(1, fName)
-            realArgs := gArr_Map(realArgs, "__g_TrimParens")
-            realArgs := gArr_Filter(realArgs, "__g_nonEmpty")
+            realArgs := gArr_Map(realArgs, "z__gutils_TrimParens")
+            realArgs := gArr_Filter(realArgs, "z__gutils_nonEmpty")
             return realArgs
         }
 
-        __g_AssertGetArgs() {
+        z__gutils_AssertGetArgs() {
             traces := gLang_StackTraceObj()
-            lastAssertFrameIndex := gArr_FindLastIndex(traces, "__g_AssertLastFrame")
+            lastAssertFrameIndex := gArr_FindLastIndex(traces, "z__gutils_AssertLastFrame")
             lastAssertFrame := traces[lastAssertFrameIndex]
             callingFrame := traces[lastAssertFrameIndex + 1]
             FileReadLine, Outvar, % callingFrame.File, % callingFrame.Line
             groups := Func(lastAssertFrame.Function).MaxParams
             params := gStr_Repeat(",([^\)]*)", groups - 1)
             pos := 1
-            parsed := __g_ParseParens(outVar, pos)
-            unparsed := __g_interpertAsFunctionCall(parsed)
+            parsed := z__gutils_ParseParens(outVar, pos)
+            unparsed := z__gutils_interpertAsFunctionCall(parsed)
             justFileName := gPath_Parse(callingFrame.File).filename
             unparsed.Push(Format("{1}:{2}", justFileName, callingFrame.Line))
             return unparsed
         }
 
-        global __g_assertFormats := {}
-        __g_ReportAssert(success, actual) {
+        global z__gutils_assertFormats := {}
+        z__gutils_ReportAssert(success, actual) {
             assertLine := ""
-            if (__g_assertResults.fail = 0 && __g_assertResults.pass = 0) {
-                OnExit(Func("__g_reportAssertionResults"))
+            if (z__gutils_assertResults.fail = 0 && z__gutils_assertResults.pass = 0) {
+                OnExit(Func("z__gutils_reportAssertionResults"))
             }
             if (success) {
                 assertLine .= "✅ "
-                __g_assertResults.pass += 1
+                z__gutils_assertResults.pass += 1
             } else {
                 assertLine .= "❌ "
-                __g_assertResults.fail += 1
+                z__gutils_assertResults.fail += 1
             }
 
-            args := __g_AssertGetArgs()
-            format := __g_assertFormats[args[1]]
+            args := z__gutils_AssertGetArgs()
+            format := z__gutils_assertFormats[args[1]]
             if (!format) {
                 gEx_Throw("You need to set a format for " args[1])
             }
@@ -160,26 +160,26 @@ __g_reportAssertionResults(z := "") {
             }
             assertLine .= gStr_Indent(Format(format " [{4}]", args*))
 
-            __g_assertOut(assertLine)
+            z__gutils_assertOut(assertLine)
         }
 
-        __g_assertFormats.gAssert_True := "{2}"
+        z__gutils_assertFormats.gAssert_True := "{2}"
         gAssert_True(real) {
-            __g_ReportAssert(real || Trim(real) != "", real)
+            z__gutils_ReportAssert(real || Trim(real) != "", real)
         }
 
-        __g_assertFormats.gAssert_False := "NOT {2}"
+        z__gutils_assertFormats.gAssert_False := "NOT {2}"
         gAssert_False(real) {
-            __g_ReportAssert(!real || Trim(real) = "", real)
+            z__gutils_ReportAssert(!real || Trim(real) = "", real)
         }
 
-        __g_assertFormats.gAssert_Eq := "{2} == {3}"
+        z__gutils_assertFormats.gAssert_Eq := "{2} == {3}"
         gAssert_Eq(real, expected) {
             success := gLang_Equal(real, expected)
-            __g_ReportAssert(success, real)
+            z__gutils_ReportAssert(success, real)
         }
 
-        __g_assertFormats.gAssert_Has := "{2} HAS {3}"
+        z__gutils_assertFormats.gAssert_Has := "{2} HAS {3}"
         gAssert_Has(real, expectedToContain) {
             if (gArr_Is(real)) {
                 success := gArr_Has(real, expectedToContain)
@@ -188,10 +188,10 @@ __g_reportAssertionResults(z := "") {
             } else {
                 gEx_Throw("Assertion invalid for " gStr(real))
             }
-            __g_ReportAssert(success, real)
+            z__gutils_ReportAssert(success, real)
 
         }
-        __g_assertFormats.gAssert_Gtr := "{2} > {3}"
+        z__gutils_assertFormats.gAssert_Gtr := "{2} > {3}"
         gAssert_Gtr(real, expected) {
-            __g_ReportAssert(real > expected, real)
+            z__gutils_ReportAssert(real > expected, real)
         }

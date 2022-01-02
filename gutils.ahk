@@ -14,7 +14,7 @@ gArr_Repeat(item, count) {
 
 ; Gets the index of the item `what` in `arr`
 gArr_IndexOf(arr, what) {
-    for ix, value in arr {
+    for ix, value in arr {]]
         if(what = value) {
             return ix
         }
@@ -125,8 +125,8 @@ gArr_Flatten(arr) {
 
 gArr_Slice(arr, start := 1, end := 0) {
     result:=[]
-    start:= __g_NormalizeIndex(start, arr.MaxIndex())
-    end:= __g_NormalizeIndex(end, arr.MaxIndex())
+    start:= z__gutils_NormalizeIndex(start, arr.MaxIndex())
+    end:= z__gutils_NormalizeIndex(end, arr.MaxIndex())
     if (end < start) {
         return result
     }
@@ -179,14 +179,14 @@ class gStackFrame extends gDeclaredMembersOnly {
     }
 }
 
-__g_entryToString(e) {
+z__gutils_entryToString(e) {
     x := Format("{1}:{2} {4}+{3} ", e.File, e.Line, e.Function, e.Offset)
     return x
 }
 
 gLang_StackTrace(ignoreLast := 0) {
     obj := gLang_StackTraceObj(ignoreLast)
-    stringify := gArr_Map(obj, "__g_entryToString")
+    stringify := gArr_Map(obj, "z__gutils_entryToString")
     return gStr_Join(stringify, "`n")
 }
 
@@ -195,7 +195,7 @@ gLang_Is(ByRef what, type) {
         Return true
 }
 
-__g_NormalizeIndex(negIndex, length) {
+z__gutils_NormalizeIndex(negIndex, length) {
     if (negIndex <= 0) {
         return length + negIndex
     }
@@ -223,11 +223,11 @@ gLang_Bool(bool, type := "TrueFalse") {
 }
 
 gLang_IsNameBuiltIn(name) {
-    static __g_builtInNames
-    if (!__g_builtInNames) {
-        __g_builtInNames:=["_NewEnum", "methods", "HasKey", "__g_noVerification", "Clone", "GetAddress", "SetCapacity", "GetCapacity", "MinIndex", "MaxIndex", "Length", "Delete", "Push", "Pop", "InsertAt", "RemoveAt", "base", "__Set", "__Get", "__Call", "__New", "__Init", "_ahkUtilsIsInitialized"]
+    static z__gutils_builtInNames
+    if (!z__gutils_builtInNames) {
+        z__gutils_builtInNames:=["_NewEnum", "methods", "HasKey", "z__gutils_noVerification", "Clone", "GetAddress", "SetCapacity", "GetCapacity", "MinIndex", "MaxIndex", "Length", "Delete", "Push", "Pop", "InsertAt", "RemoveAt", "base", "__Set", "__Get", "__Call", "__New", "__Init", "_ahkUtilsIsInitialized"]
     }
-    for i, x in __g_builtInNames {
+    for i, x in z__gutils_builtInNames {
         if (x = name) {
             return True
         }
@@ -240,7 +240,7 @@ gLang_IsNameBuiltIn(name) {
 ; The class implements __Get, __Call, and __Set.
 class gDeclaredMembersOnly {
     __Call(name, params*) {
-        if (!gLang_IsNameBuiltIn(name) && !this.__g_noVerification) {
+        if (!gLang_IsNameBuiltIn(name) && !this.z__gutils_noVerification) {
             gEx_Throw("Tried to call undeclared method '" name "'.")
         } 
     }
@@ -251,38 +251,38 @@ class gDeclaredMembersOnly {
 
     __Init() {
         ; We want to disable name verification to allow the extending object's initializer to safely initialize the type's fields.
-        if (this.__g_noVerification) {
+        if (this.z__gutils_noVerification) {
             return
         }
-        this.__g_noVerification := true
+        this.z__gutils_noVerification := true
 
         this.__Init()
-        this.Delete("__g_noVerification")
+        this.Delete("z__gutils_noVerification")
     }
 
     __Get(name) {
-        if (!gLang_IsNameBuiltIn(name) && !this.__g_noVerification) {
+        if (!gLang_IsNameBuiltIn(name) && !this.z__gutils_noVerification) {
             gEx_Throw("Tried to get the value of undeclared member '" name "'.")
         }
     }
 
     __Set(name, values*) {
-        if (!gLang_IsNameBuiltIn(name) && !this.__g_noVerification) {
+        if (!gLang_IsNameBuiltIn(name) && !this.z__gutils_noVerification) {
             gEx_Throw("Tried to set the value of undeclared member '" name "'.")
         }
     }
 
     __DisableVerification() {
-        ObjRawSet(this, "__g_noVerification", true)
+        ObjRawSet(this, "z__gutils_noVerification", true)
     }
 
     __EnableVerification() {
-        this.Delete("__g_noVerification")
+        this.Delete("z__gutils_noVerification")
     }
 
     __IsVerifying {
         get {
-            return !this.HasKey("__g_noVerification")
+            return !this.HasKey("z__gutils_noVerification")
         }
     }
 
@@ -388,7 +388,7 @@ gLang_Equal(a, b, case := False) {
     return False
 }
 
-__g_isObject(name, obj, canBeArray := False) {
+z__gutils_isObject(name, obj, canBeArray := False) {
     if (!isObject(obj)) {
         gEx_Throw("Parameter " name " is not an object: " obj)
     }
@@ -404,7 +404,7 @@ gObj_Is(obj) {
 }
 
 gObj_HasAnyKey(obj, keys*) {
-    __g_isObject("obj", obj, True)
+    z__gutils_isObject("obj", obj, True)
     for i, k in keys {
         if (obj.HasKey(k)) {
             return True
@@ -414,7 +414,7 @@ gObj_HasAnyKey(obj, keys*) {
 }
 
 gObj_Keys(obj) {
-    __g_isObject("obj", obj, True)
+    z__gutils_isObject("obj", obj, True)
     keys := []
     for k in obj {
         keys.Push(k)
@@ -672,15 +672,15 @@ gStr_LastIndexOf(ByRef where, ByRef what, case := false, pos := 1) {
 }
 
 gStr_SplitAt(ByRef where, pos) {
-    pos := __g_NormalizeIndex(pos, StrLen(where))
+    pos := z__gutils_NormalizeIndex(pos, StrLen(where))
     first := gStr_Slice(where, pos - 1)
     last := gStr_Slice(where, pos + 1)
     return [first, last]
 }
 
 gStr_Slice(ByRef where, start := 1, end := 0) {
-    start := __g_NormalizeIndex(start, StrLen(where))
-    end := __g_NormalizeIndex(end, StrLen(where))
+    start := z__gutils_NormalizeIndex(start, StrLen(where))
+    end := z__gutils_NormalizeIndex(end, StrLen(where))
     return SubStr(where, start, end - start + 1)
 }
 
@@ -843,14 +843,14 @@ gWin_IsMouseCursorVisible() {
     return Result > 1
 }
 
-__g_MatchingInfoKeys := ["speed", "mode", "hiddenWindows", "hiddenText", "title", "text", "excludeTitle", "excludeText"]
-global __g_MatchingInfoValidator := gObj_NewValidator("MatchingInfo", [], __g_MatchingInfoKeys)
+z__gutils_MatchingInfoKeys := ["speed", "mode", "hiddenWindows", "hiddenText", "title", "text", "excludeTitle", "excludeText"]
+global z__gutils_MatchingInfoValidator := gObj_NewValidator("MatchingInfo", [], z__gutils_MatchingInfoKeys)
 
 gWin_GetMatchingInfo() {
     return {hiddenWindows: A_DetectHiddenWindows, hiddenText: A_DetectHiddenText, speed: A_TitleMatchModeSpeed, mode: A_TitleMatchMode}
 }
 
-__g_maybeSetMatchingInfo(obj) {
+z__gutils_maybeSetMatchingInfo(obj) {
     if (obj = False) {
         return
     }
@@ -858,7 +858,7 @@ __g_maybeSetMatchingInfo(obj) {
 }
 
 gWin_SetMatchingInfo(infoObj) {
-    __g_MatchingInfoValidator.Assert(infoObj)
+    z__gutils_MatchingInfoValidator.Assert(infoObj)
     modified := False
     old := gWin_GetMatchingInfo()
     if (infoObj.HasKey("mode")) {
@@ -880,7 +880,7 @@ gWin_SetMatchingInfo(infoObj) {
     return modified ? old : False
 }
 
-__g_WinGet(hwnd, subCommand) {
+z__gutils_WinGet(hwnd, subCommand) {
     WinGet, v, % subCommand, ahk_id %hwnd%
     return v
 }
@@ -1037,7 +1037,7 @@ class gWinInfo extends gDeclaredMembersOnly {
 }
 
 gWin_Get(query) {
-    __g_MatchingInfoValidator.Assert(query)
+    z__gutils_MatchingInfoValidator.Assert(query)
     old := gWin_SetMatchingInfo(query)
     try {
         hwnd := WinExist(query.title, query.text, query.excludeTitle, query.excludeText)
@@ -1046,12 +1046,12 @@ gWin_Get(query) {
         }
         return new gWinInfo(hwnd)
     } finally {
-        __g_maybeSetMatchingInfo(old)
+        z__gutils_maybeSetMatchingInfo(old)
     }
 }
 
 gWin_List(query) {
-    __g_MatchingInfoValidator.Assert(query)
+    z__gutils_MatchingInfoValidator.Assert(query)
     WinGet, win, List, % query.title, % query.text, % query.excludeTitle, % query.excludeText
     arr := []
     Loop, % win 
@@ -1062,18 +1062,18 @@ gWin_List(query) {
 }
 
 gWin_Wait(query, timeout := "") {
-    __g_MatchingInfoValidator.Assert(query)
+    z__gutils_MatchingInfoValidator.Assert(query)
     old := gWin_SetMatchingInfo(query)
     try {
         WinWait, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
     } finally {
-        __g_maybeSetMatchingInfo(old)
+        z__gutils_maybeSetMatchingInfo(old)
     }
 
 }
 
 gWin_WaitActive(query, active := 1, timeout := "") {
-    __g_MatchingInfoValidator.Assert(query)
+    z__gutils_MatchingInfoValidator.Assert(query)
     old := gWin_SetMatchingInfo(query)
     try {
         if (active) {
@@ -1082,17 +1082,17 @@ gWin_WaitActive(query, active := 1, timeout := "") {
             WinWaitNotActive, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
         }
     } finally {
-        __g_maybeSetMatchingInfo(old)
+        z__gutils_maybeSetMatchingInfo(old)
     }
 }
 
 gWin_WaitClose(query, timeout := "") {
-    __g_MatchingInfoValidator.Assert(query)
+    z__gutils_MatchingInfoValidator.Assert(query)
     old := gWin_SetMatchingInfo(query)
     try {
         WinWaitClose, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
     } finally {
-        __g_maybeSetMatchingInfo(obj)
+        z__gutils_maybeSetMatchingInfo(obj)
     }
 
 }
@@ -1134,14 +1134,14 @@ gSys_Pid() {
     return DllCall("GetCurrentProcessId")	
 }
 
-global __g_wmi := ComObjGet("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2") 
+global z__gutils_wmi := ComObjGet("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2") 
 
 gSys_GetProcessInfo(pid := "") {
     if (pid = "") {
         pid := gSys_Pid()
     }
     query = Select * From Win32_Process where ProcessId = %pid%
-    results := __g_wmi.ExecQuery(query)._NewEnum()
+    results := z__gutils_wmi.ExecQuery(query)._NewEnum()
     while results[proc]
     {
         return {Name: proc.Name
@@ -1153,7 +1153,7 @@ gSys_GetProcessInfo(pid := "") {
 
 gSys_GetParentPid(pid) {
     query = Select ParentProcessId From Win32_Process where ProcessId = %pid%
-    results := __g_wmi.ExecQuery(query)._NewEnum()
+    results := z__gutils_wmi.ExecQuery(query)._NewEnum()
     while results[proc]
     {
         return proc.ParentProcessId
@@ -1287,28 +1287,28 @@ gSys_GetParentPid(pid) {
 ; }
 
 
-__g_noramlizeRoot(root) {
-    static __g_roots
-    if (!__g_roots) {
-        __g_roots := {"HKLM" : "HKEY_LOCAL_MACHINE"
+z__gutils_noramlizeRoot(root) {
+    static z__gutils_roots
+    if (!z__gutils_roots) {
+        z__gutils_roots := {"HKLM" : "HKEY_LOCAL_MACHINE"
             ,"HKCR": "HKEY_CLASSES_ROOT"
             ,"HKU": "HKEY_USERS"
             ,"HKCU" : "HKEY_CURRENT_USER"
         ,"HPD": "HKEY_PERFORMANCE_DATA"}
 
         ; This is needed so the normalizer is idempotent and also to normalize case
-        for key, v in __g_roots {
-            __g_roots[v] := v
+        for key, v in z__gutils_roots {
+            z__gutils_roots[v] := v
         }
     }
-    return __g_roots[root]
+    return z__gutils_roots[root]
 }
 
-__g_splitRegPath(path) {
+z__gutils_splitRegPath(path) {
     if (Trim(path) = "") {
         gEx_Throw("Empty string not a valid registry path.")
     }
-    normalizedAsRoot := __g_noramlizeRoot(path)
+    normalizedAsRoot := z__gutils_noramlizeRoot(path)
     if (normalizedAsRoot) {
         return [normalizedAsRoot, ""]
     }
@@ -1316,7 +1316,7 @@ __g_splitRegPath(path) {
     root := ""
     subkey := ""
     if (parsed.MaxIndex() = 2) {
-        normalizedRoot := __g_noramlizeRoot(parsed[1])
+        normalizedRoot := z__gutils_noramlizeRoot(parsed[1])
         if (!normalizedRoot) {
             return ["", path]
         }
@@ -1326,20 +1326,20 @@ __g_splitRegPath(path) {
     }
 }
 
-__g_normalizeRootInPath(path) {
-    return gPath_Join(__g_splitRegPath(path))
+z__gutils_normalizeRootInPath(path) {
+    return gPath_Join(z__gutils_splitRegPath(path))
 }
 
-__g_resolveRegPath(parts*) {
+z__gutils_resolveRegPath(parts*) {
     ; Format the registry path like an fs path and use the syscall to resolve it
     parts.InsertAt(1, "C:")
     resolved := gPath_Resolve(parts*)
     noDrive := gStr_Slice(resolved, 4)
-    resolvedRoot := gStr_Trim(__g_normalizeRootInPath(noDrive))
+    resolvedRoot := gStr_Trim(z__gutils_normalizeRootInPath(noDrive))
     return resolvedRoot
 }
 
-__g_checkKeyExists(rootedKey) {
+z__gutils_checkKeyExists(rootedKey) {
     if (rootedKey = "") {
         gEx_Throw("Empty key not a legal registry path.")
     }
@@ -1347,8 +1347,8 @@ __g_checkKeyExists(rootedKey) {
     {
         return True
     }
-    rootedKey := __g_normalizeRootInPath(rootedKey)
-    parent := __g_resolveRegPath(rootedKey, "..")
+    rootedKey := z__gutils_normalizeRootInPath(rootedKey)
+    parent := z__gutils_resolveRegPath(rootedKey, "..")
     Loop, Reg, % parent, K
     {
         curFullKey := gPath_Join(A_LoopRegKey, A_LoopRegSubkey, A_LoopRegName)
@@ -1364,7 +1364,7 @@ class gRegKey extends gDeclaredMembersOnly {
     subKey := ""
     __New(parts*) {
         root := parts[1]
-        this.root := __g_noramlizeRoot(root)
+        this.root := z__gutils_noramlizeRoot(root)
         this.subkey := gPath_Join(gArr_Slice(parts, 2))
         if (!this.root) {
             gEX_Throw("Root was empty.")
@@ -1396,11 +1396,11 @@ class gRegKey extends gDeclaredMembersOnly {
     ; @param subkeys ...string[] Path components that appear in order. They will be rooted at the current key.
     Child(parts*) {
         joined := gPath_Join(parts*)
-        resolved := __g_resolveRegPath(this.Key, joined)
-        if (!__g_checkKeyExists(resolved)) {
+        resolved := z__gutils_resolveRegPath(this.Key, joined)
+        if (!z__gutils_checkKeyExists(resolved)) {
             return ""
         }
-        parts := __g_splitRegPath(resolved)
+        parts := z__gutils_splitRegPath(resolved)
         child := new gRegKey(parts*)
         return child
     }
@@ -1410,8 +1410,8 @@ class gRegKey extends gDeclaredMembersOnly {
             if (this.IsRoot) {
                 gEx_Throw("Can't get parent of root.")
             }
-            parent := __g_resolveRegPath(this.Key, "..")
-            parsed := __g_splitRegPath(parent)
+            parent := z__gutils_resolveRegPath(this.Key, "..")
+            parsed := z__gutils_splitRegPath(parent)
             return new gRegKey(parsed[1], parsed[2])
         }
     }
@@ -1459,8 +1459,8 @@ class gRegKey extends gDeclaredMembersOnly {
     }
 
     Create(parts*) {
-        fullKey := __g_resolveRegPath(this.Key, parts*)
-        if (__g_checkKeyExists(fullKey)) {
+        fullKey := z__gutils_resolveRegPath(this.Key, parts*)
+        if (z__gutils_checkKeyExists(fullKey)) {
             gEx_Throw(Format("Key '{1}' already exists.", fullKey))
         }
         ; We need to create this dummy key because RegWrite can't actually create empty keys
@@ -1471,13 +1471,13 @@ class gRegKey extends gDeclaredMembersOnly {
         }  catch err {
             gEx_ThrowObj(err)
         }
-        parsed := __g_splitRegPath(fullKey)
+        parsed := z__gutils_splitRegPath(fullKey)
         return new gRegKey(parsed[1], parsed[2])
     }
 
     Has(parts*) {
         parts.InsertAt(1, this.key)
-        return __g_checkKeyExists(gPath_Join(parts))
+        return z__gutils_checkKeyExists(gPath_Join(parts))
     }
 
     HasV(name) {
@@ -1512,10 +1512,10 @@ class gRegKey extends gDeclaredMembersOnly {
 }
 
 gReg(key) {
-    if (!__g_checkKeyExists(key)) {
+    if (!z__gutils_checkKeyExists(key)) {
         gEx_Throw(Format("Key '{1}' doesn't exist.", key))
     }
-    parsed := __g_splitRegPath(key)
+    parsed := z__gutils_splitRegPath(key)
     return new gRegKey(parsed[1], parsed[2])
 }
 
@@ -1523,27 +1523,27 @@ gReg_Is(obj) {
     return obj.base = gRegKey
 }
 
-__g_setupNonObjectCheck() {
+z__gutils_setupNonObjectCheck() {
     rawBase := "".base
-    rawBase.__Get := Func("__g_UnknownGet")
-    rawBase.__Set := Func("__g_UnknownSet")
-    rawBase.__Call := Func("__g_UnknownCall")
+    rawBase.__Get := Func("z__gutils_UnknownGet")
+    rawBase.__Set := Func("z__gutils_UnknownSet")
+    rawBase.__Call := Func("z__gutils_UnknownCall")
 }
-global __g_currentError := ""
-global __g_vsCodeProcess := ""
-__g_UnknownGet(nonobj, name) {
+global z__gutils_currentError := ""
+global z__gutils_vsCodeProcess := ""
+z__gutils_UnknownGet(nonobj, name) {
     gEx_Throw(Format("Tried to get property '{1}' from non-object value '{2}',", name, nonobj))
 }
 
-__g_UnknownSet(nonobj, name, values*) {
+z__gutils_UnknownSet(nonobj, name, values*) {
     gEx_Throw(Format("Tried to set property '{1}' on non-object value '{2}'.", name, nonobj))
 }
 
-__g_UnknownCall(nonobj, name, args*) {
+z__gutils_UnknownCall(nonobj, name, args*) {
     gEx_Throw(Format("Tried to call method '{1}' on non-object value '{2}'.", name, nonobj))
 }
 
-__g_detectVsCode() {
+z__gutils_detectVsCode() {
     ; We need to get the topmost vscode process...
     processInfo := gSys_GetProcessInfo()
     ; Find the outermost code.exe process that's the parent of this process
@@ -1552,7 +1552,7 @@ __g_detectVsCode() {
         processInfo := gSys_GetProcessInfo(processInfo.ParentPid)
 
     } until (!(processInfo && processInfo.Name = "code.exe"))
-    __g_vsCodeProcess := last
+    z__gutils_vsCodeProcess := last
 }
 
 gEx_Print(ex) {
@@ -1567,74 +1567,74 @@ gEx_Print(ex) {
     return JSON.Dump(clone,,2)
 }
 
-__g_ex_gui_clickedList() {
+z__gutils_ex_gui_clickedList() {
 
-    if (A_GuiEvent = "DoubleClick" && __g_vsCodeProcess.Pid) {
+    if (A_GuiEvent = "DoubleClick" && z__gutils_vsCodeProcess.Pid) {
         try {
-            Gui, __g_errorBox: +Disabled
+            Gui, z__gutils_errorBox: +Disabled
             row := "a"
             row := LV_GetNext()
             if (!row) {
                 Return
             }
-            stackEntry := __g_currentError.StackTrace[row]
-            latestCodeWindow := gWin_Get({title: "ahk_pid " __g_vsCodeProcess.Pid})
+            stackEntry := z__gutils_currentError.StackTrace[row]
+            latestCodeWindow := gWin_Get({title: "ahk_pid " z__gutils_vsCodeProcess.Pid})
             latestCodeWindow.Activate()
             sourceLocation := stackEntry.File
             SendInput, % "^P{Backspace}" stackEntry.File
             Sleep 150
             SendInput, % ":" stackEntry.Line "{Enter}"
         } finally {
-            Gui, __g_errorBox: -Disabled
+            Gui, z__gutils_errorBox: -Disabled
 
         }
     }
 }
 
-__g_ex_gui_pressedOk() {
-    Gui, __g_errorBox: Cancel
+z__gutils_ex_gui_pressedOk() {
+    Gui, z__gutils_errorBox: Cancel
 
 }
 
-__g_ex_gui_copyDetails() {
-    Clipboard:=gEx_Print(__g_currentError)
+z__gutils_ex_gui_copyDetails() {
+    Clipboard:=gEx_Print(z__gutils_currentError)
 }
 
-__g_errorBoxOnClose() {
-    __g_currentError := ""
+z__gutils_errorBoxOnClose() {
+    z__gutils_currentError := ""
 }
 
-__g_openExceptionGuiFor(ex) {
+z__gutils_openExceptionGuiFor(ex) {
 
     try {
-        if (__g_currentError) {
+        if (z__gutils_currentError) {
             return
         }
-        __g_currentError := ex
+        z__gutils_currentError := ex
         static imageList := ""
         if (!IsObject(ex) || ObjGetBase(ex) !== gOopsError) {
             return
         }
-        if (!imageList && __g_vsCodeProcess) {
+        if (!imageList && z__gutils_vsCodeProcess) {
             imageList := IL_Create()
             Loop, 10
             {
-                IL_add(imageList, __g_vsCodeProcess.Path, 1)
+                IL_add(imageList, z__gutils_vsCodeProcess.Path, 1)
             }
         }
-        Gui, __g_errorBox: New, , An error has occurred!
-        Gui, __g_errorBox: +AlwaysOnTop
-        Gui, __g_errorBox: Font, S10 CDefault, Verdana
-        Gui, __g_errorBox: Add, Text, x12 y9 w240 h20 , An error has occurred in the script:
-        Gui, __g_errorBox: Add, Edit, x272 y9 w190 h20 ReadOnly, %A_ScriptName%
+        Gui, z__gutils_errorBox: New, , An error has occurred!
+        Gui, z__gutils_errorBox: +AlwaysOnTop
+        Gui, z__gutils_errorBox: Font, S10 CDefault, Verdana
+        Gui, z__gutils_errorBox: Add, Text, x12 y9 w240 h20 , An error has occurred in the script:
+        Gui, z__gutils_errorBox: Add, Edit, x272 y9 w190 h20 ReadOnly, %A_ScriptName%
 
-        Gui, __g_errorBox: Add, Text, x13 y33 w82 h20 , Error Type:
-        Gui, __g_errorBox: Add, Edit, x101 y34 w361 h20 ReadOnly, % ex.Type
+        Gui, z__gutils_errorBox: Add, Text, x13 y33 w82 h20 , Error Type:
+        Gui, z__gutils_errorBox: Add, Edit, x101 y34 w361 h20 ReadOnly, % ex.Type
 
-        Gui, __g_errorBox: Add, Text, x12 y56 w68 h16 , Message:
-        Gui, __g_errorBox: Add, Edit, x11 y76 w453 h103 ReadOnly, % ex.Message
+        Gui, z__gutils_errorBox: Add, Text, x12 y56 w68 h16 , Message:
+        Gui, z__gutils_errorBox: Add, Edit, x11 y76 w453 h103 ReadOnly, % ex.Message
 
-        Gui, __g_errorBox: Add, Text, x11 y183 w180 h18 , Inner Exception Message:
+        Gui, z__gutils_errorBox: Add, Text, x11 y183 w180 h18 , Inner Exception Message:
 
         innerExContent := "(No inner exception)"
 
@@ -1643,16 +1643,16 @@ __g_openExceptionGuiFor(ex) {
         } else if (ex.InnerException) {
             innerExContent := ex.InnerException
         }
-        Gui, __g_errorBox: Add, Edit, x12 y203 w452 h87 ReadOnly, % innerExContent
-        Gui, __g_errorBox: Add, Button, x375 y466 w89 h25 g__g_ex_gui_pressedOk Default, OK
+        Gui, z__gutils_errorBox: Add, Edit, x12 y203 w452 h87 ReadOnly, % innerExContent
+        Gui, z__gutils_errorBox: Add, Button, x375 y466 w89 h25 gz__gutils_ex_gui_pressedOk Default, OK
 
         stackTraceLabel:="Stack Trace:"
         if (A_IsCompiled) {
             stackTraceLabel.= " (is compiled)"
         }
-        Gui, __g_errorBox: Add, Text, x12 y293 w500 h17 , % stackTraceLabel
-        Gui, __g_errorBox: Add, ListView, x12 y313 w453 h146 g__g_ex_gui_clickedList, Pos|Function|File|Ln#|Offset
-        Gui, Add, Button, x12 y466 w89 h25 g__g_ex_gui_copyDetails, Copy Details
+        Gui, z__gutils_errorBox: Add, Text, x12 y293 w500 h17 , % stackTraceLabel
+        Gui, z__gutils_errorBox: Add, ListView, x12 y313 w453 h146 gz__gutils_ex_gui_clickedList, Pos|Function|File|Ln#|Offset
+        Gui, Add, Button, x12 y466 w89 h25 gz__gutils_ex_gui_copyDetails, Copy Details
         if (imageList) {
             LV_SetImageList(imageList)
         }
@@ -1664,38 +1664,38 @@ __g_openExceptionGuiFor(ex) {
         {
             LV_ModifyCol(A_Index, "AutoHdr")
         }
-        Gui, __g_errorBox: Show, w477 h505
+        Gui, z__gutils_errorBox: Show, w477 h505
     } catch ex {
-        Gui, __g_errorBox: Destroy
-        __g_currentError := ""
+        Gui, z__gutils_errorBox: Destroy
+        z__gutils_currentError := ""
         throw ex
     }
 }
 
-global __g_oopsSetup := False
+global z__gutils_oopsSetup := False
 
 gOops_Setup() {
-    if (__g_oopsSetup) {
+    if (z__gutils_oopsSetup) {
         return
     }
-    __g_oopsSetup := True
-    __g_setupNonObjectCheck()
-    __g_detectVsCode()
-    OnError(Func("__g_openExceptionGuiFor"))
+    z__gutils_oopsSetup := True
+    z__gutils_setupNonObjectCheck()
+    z__gutils_detectVsCode()
+    OnError(Func("z__gutils_openExceptionGuiFor"))
 }
 
 
-global __g_assertResults = {fail: 0, pass: 0}
+global z__gutils_assertResults = {fail: 0, pass: 0}
 
-__g_assertOut(line) {
+z__gutils_assertOut(line) {
     e := Chr("0x001b")
     line := gStr_Replace(line, "\e", e)
 
     FileAppend, % "`r`n" line , *, UTF-8
 }
-__g_reportAssertionResults(z := "") {
-    fail := __g_assertResults.fail
-    pass := __g_assertResults.pass
+z__gutils_reportAssertionResults(z := "") {
+    fail := z__gutils_assertResults.fail
+    pass := z__gutils_assertResults.pass
     line := gStr_Repeat("═", 50)
     len1 := gStr_Repeat(" ", 7)
     len2 := gStr_Repeat(" ", 13)
@@ -1712,15 +1712,15 @@ __g_reportAssertionResults(z := "") {
                 lines.Push(line)
             }
 
-            __g_AssertOut(gStr_Join(lines, "`r`n"))
+            z__gutils_AssertOut(gStr_Join(lines, "`r`n"))
 
         }
 
-        __g_AssertLastFrame(entry) {
+        z__gutils_AssertLastFrame(entry) {
             return InStr(entry.Function, "gAssert")
         }
 
-        __g_ParseParens(ByRef str, ByRef pos, outerParen := "") {
+        z__gutils_ParseParens(ByRef str, ByRef pos, outerParen := "") {
             arr := []
             cur := outerParen
             results := []
@@ -1733,7 +1733,7 @@ __g_reportAssertionResults(z := "") {
                         results.Push(cur)
                     }
                     cur := ""
-                    result := __g_ParseParens(str, pos, char)
+                    result := z__gutils_ParseParens(str, pos, char)
                     results.Push(result)
                 }
                 else if (gArr_Has(["]", ")", "}"], char)) {
@@ -1752,29 +1752,29 @@ __g_reportAssertionResults(z := "") {
             return results
         }
 
-        __g_flattenParenBlock(what) {
+        z__gutils_flattenParenBlock(what) {
             if (gStr_Is(what)) {
                 return what
             }
-            return gStr_Join(gArr_Map(what, "__g_flattenParenBlock"), "")
+            return gStr_Join(gArr_Map(what, "z__gutils_flattenParenBlock"), "")
         }
 
-        __g_TrimParens(x) {
+        z__gutils_TrimParens(x) {
             return Trim(x)
         }
 
-        __g_nonEmpty(x) {
+        z__gutils_nonEmpty(x) {
             return !!x
         }
 
-        __g_interpertAsFunctionCall(what) {
+        z__gutils_interpertAsFunctionCall(what) {
             fName := what[1]
             args := what[2]
             realArgs := []
             curArg := ""
             for i, arg in args {
                 if (gArr_Is(arg)) {
-                    curArg .= __g_flattenParenBlock(arg)
+                    curArg .= z__gutils_flattenParenBlock(arg)
                     continue
                 }
                 parts := gStr_Split(arg, ",")
@@ -1797,43 +1797,43 @@ __g_reportAssertionResults(z := "") {
             realArgs[1] := gStr_TrimLeft(realArgs[1], "(")
             realArgs[realArgs.MaxIndex()] := gStr_TrimRight(realArgs[realArgs.MaxIndex()], ")")
             realArgs.InsertAt(1, fName)
-            realArgs := gArr_Map(realArgs, "__g_TrimParens")
-            realArgs := gArr_Filter(realArgs, "__g_nonEmpty")
+            realArgs := gArr_Map(realArgs, "z__gutils_TrimParens")
+            realArgs := gArr_Filter(realArgs, "z__gutils_nonEmpty")
             return realArgs
         }
 
-        __g_AssertGetArgs() {
+        z__gutils_AssertGetArgs() {
             traces := gLang_StackTraceObj()
-            lastAssertFrameIndex := gArr_FindLastIndex(traces, "__g_AssertLastFrame")
+            lastAssertFrameIndex := gArr_FindLastIndex(traces, "z__gutils_AssertLastFrame")
             lastAssertFrame := traces[lastAssertFrameIndex]
             callingFrame := traces[lastAssertFrameIndex + 1]
             FileReadLine, Outvar, % callingFrame.File, % callingFrame.Line
             groups := Func(lastAssertFrame.Function).MaxParams
             params := gStr_Repeat(",([^\)]*)", groups - 1)
             pos := 1
-            parsed := __g_ParseParens(outVar, pos)
-            unparsed := __g_interpertAsFunctionCall(parsed)
+            parsed := z__gutils_ParseParens(outVar, pos)
+            unparsed := z__gutils_interpertAsFunctionCall(parsed)
             justFileName := gPath_Parse(callingFrame.File).filename
             unparsed.Push(Format("{1}:{2}", justFileName, callingFrame.Line))
             return unparsed
         }
 
-        global __g_assertFormats := {}
-        __g_ReportAssert(success, actual) {
+        global z__gutils_assertFormats := {}
+        z__gutils_ReportAssert(success, actual) {
             assertLine := ""
-            if (__g_assertResults.fail = 0 && __g_assertResults.pass = 0) {
-                OnExit(Func("__g_reportAssertionResults"))
+            if (z__gutils_assertResults.fail = 0 && z__gutils_assertResults.pass = 0) {
+                OnExit(Func("z__gutils_reportAssertionResults"))
             }
             if (success) {
                 assertLine .= "✅ "
-                __g_assertResults.pass += 1
+                z__gutils_assertResults.pass += 1
             } else {
                 assertLine .= "❌ "
-                __g_assertResults.fail += 1
+                z__gutils_assertResults.fail += 1
             }
 
-            args := __g_AssertGetArgs()
-            format := __g_assertFormats[args[1]]
+            args := z__gutils_AssertGetArgs()
+            format := z__gutils_assertFormats[args[1]]
             if (!format) {
                 gEx_Throw("You need to set a format for " args[1])
             }
@@ -1843,26 +1843,26 @@ __g_reportAssertionResults(z := "") {
             }
             assertLine .= gStr_Indent(Format(format " [{4}]", args*))
 
-            __g_assertOut(assertLine)
+            z__gutils_assertOut(assertLine)
         }
 
-        __g_assertFormats.gAssert_True := "{2}"
+        z__gutils_assertFormats.gAssert_True := "{2}"
         gAssert_True(real) {
-            __g_ReportAssert(real || Trim(real) != "", real)
+            z__gutils_ReportAssert(real || Trim(real) != "", real)
         }
 
-        __g_assertFormats.gAssert_False := "NOT {2}"
+        z__gutils_assertFormats.gAssert_False := "NOT {2}"
         gAssert_False(real) {
-            __g_ReportAssert(!real || Trim(real) = "", real)
+            z__gutils_ReportAssert(!real || Trim(real) = "", real)
         }
 
-        __g_assertFormats.gAssert_Eq := "{2} == {3}"
+        z__gutils_assertFormats.gAssert_Eq := "{2} == {3}"
         gAssert_Eq(real, expected) {
             success := gLang_Equal(real, expected)
-            __g_ReportAssert(success, real)
+            z__gutils_ReportAssert(success, real)
         }
 
-        __g_assertFormats.gAssert_Has := "{2} HAS {3}"
+        z__gutils_assertFormats.gAssert_Has := "{2} HAS {3}"
         gAssert_Has(real, expectedToContain) {
             if (gArr_Is(real)) {
                 success := gArr_Has(real, expectedToContain)
@@ -1871,12 +1871,12 @@ __g_reportAssertionResults(z := "") {
             } else {
                 gEx_Throw("Assertion invalid for " gStr(real))
             }
-            __g_ReportAssert(success, real)
+            z__gutils_ReportAssert(success, real)
 
         }
-        __g_assertFormats.gAssert_Gtr := "{2} > {3}"
+        z__gutils_assertFormats.gAssert_Gtr := "{2} > {3}"
         gAssert_Gtr(real, expected) {
-            __g_ReportAssert(real > expected, real)
+            z__gutils_ReportAssert(real > expected, real)
         }
 
 

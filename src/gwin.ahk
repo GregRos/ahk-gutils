@@ -36,14 +36,14 @@ gWin_IsMouseCursorVisible() {
     return Result > 1
 }
 
-__g_MatchingInfoKeys := ["speed", "mode", "hiddenWindows", "hiddenText", "title", "text", "excludeTitle", "excludeText"]
-global __g_MatchingInfoValidator := gObj_NewValidator("MatchingInfo", [], __g_MatchingInfoKeys)
+z__gutils_MatchingInfoKeys := ["speed", "mode", "hiddenWindows", "hiddenText", "title", "text", "excludeTitle", "excludeText"]
+global z__gutils_MatchingInfoValidator := gObj_NewValidator("MatchingInfo", [], z__gutils_MatchingInfoKeys)
 
 gWin_GetMatchingInfo() {
     return {hiddenWindows: A_DetectHiddenWindows, hiddenText: A_DetectHiddenText, speed: A_TitleMatchModeSpeed, mode: A_TitleMatchMode}
 }
 
-__g_maybeSetMatchingInfo(obj) {
+z__gutils_maybeSetMatchingInfo(obj) {
     if (obj = False) {
         return
     }
@@ -51,7 +51,7 @@ __g_maybeSetMatchingInfo(obj) {
 }
 
 gWin_SetMatchingInfo(infoObj) {
-    __g_MatchingInfoValidator.Assert(infoObj)
+    z__gutils_MatchingInfoValidator.Assert(infoObj)
     modified := False
     old := gWin_GetMatchingInfo()
     if (infoObj.HasKey("mode")) {
@@ -73,7 +73,7 @@ gWin_SetMatchingInfo(infoObj) {
     return modified ? old : False
 }
 
-__g_WinGet(hwnd, subCommand) {
+z__gutils_WinGet(hwnd, subCommand) {
     WinGet, v, % subCommand, ahk_id %hwnd%
     return v
 }
@@ -230,7 +230,7 @@ class gWinInfo extends gDeclaredMembersOnly {
 }
 
 gWin_Get(query) {
-    __g_MatchingInfoValidator.Assert(query)
+    z__gutils_MatchingInfoValidator.Assert(query)
     old := gWin_SetMatchingInfo(query)
     try {
         hwnd := WinExist(query.title, query.text, query.excludeTitle, query.excludeText)
@@ -239,12 +239,12 @@ gWin_Get(query) {
         }
         return new gWinInfo(hwnd)
     } finally {
-        __g_maybeSetMatchingInfo(old)
+        z__gutils_maybeSetMatchingInfo(old)
     }
 }
 
 gWin_List(query) {
-    __g_MatchingInfoValidator.Assert(query)
+    z__gutils_MatchingInfoValidator.Assert(query)
     WinGet, win, List, % query.title, % query.text, % query.excludeTitle, % query.excludeText
     arr := []
     Loop, % win 
@@ -255,18 +255,18 @@ gWin_List(query) {
 }
 
 gWin_Wait(query, timeout := "") {
-    __g_MatchingInfoValidator.Assert(query)
+    z__gutils_MatchingInfoValidator.Assert(query)
     old := gWin_SetMatchingInfo(query)
     try {
         WinWait, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
     } finally {
-        __g_maybeSetMatchingInfo(old)
+        z__gutils_maybeSetMatchingInfo(old)
     }
 
 }
 
 gWin_WaitActive(query, active := 1, timeout := "") {
-    __g_MatchingInfoValidator.Assert(query)
+    z__gutils_MatchingInfoValidator.Assert(query)
     old := gWin_SetMatchingInfo(query)
     try {
         if (active) {
@@ -275,17 +275,17 @@ gWin_WaitActive(query, active := 1, timeout := "") {
             WinWaitNotActive, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
         }
     } finally {
-        __g_maybeSetMatchingInfo(old)
+        z__gutils_maybeSetMatchingInfo(old)
     }
 }
 
 gWin_WaitClose(query, timeout := "") {
-    __g_MatchingInfoValidator.Assert(query)
+    z__gutils_MatchingInfoValidator.Assert(query)
     old := gWin_SetMatchingInfo(query)
     try {
         WinWaitClose, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
     } finally {
-        __g_maybeSetMatchingInfo(obj)
+        z__gutils_maybeSetMatchingInfo(obj)
     }
 
 }

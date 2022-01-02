@@ -1,7 +1,7 @@
 gArr_Slice(arr, start := 1, end := 0) {
     result:=[]
-    start:= __g_NormalizeIndex(start, arr.MaxIndex())
-    end:= __g_NormalizeIndex(end, arr.MaxIndex())
+    start:= z__gutils_NormalizeIndex(start, arr.MaxIndex())
+    end:= z__gutils_NormalizeIndex(end, arr.MaxIndex())
     if (end < start) {
         return result
     }
@@ -54,14 +54,14 @@ class gStackFrame extends gDeclaredMembersOnly {
     }
 }
 
-__g_entryToString(e) {
+z__gutils_entryToString(e) {
     x := Format("{1}:{2} {4}+{3} ", e.File, e.Line, e.Function, e.Offset)
     return x
 }
 
 gLang_StackTrace(ignoreLast := 0) {
     obj := gLang_StackTraceObj(ignoreLast)
-    stringify := gArr_Map(obj, "__g_entryToString")
+    stringify := gArr_Map(obj, "z__gutils_entryToString")
     return gStr_Join(stringify, "`n")
 }
 
@@ -70,7 +70,7 @@ gLang_Is(ByRef what, type) {
         Return true
 }
 
-__g_NormalizeIndex(negIndex, length) {
+z__gutils_NormalizeIndex(negIndex, length) {
     if (negIndex <= 0) {
         return length + negIndex
     }
@@ -98,11 +98,11 @@ gLang_Bool(bool, type := "TrueFalse") {
 }
 
 gLang_IsNameBuiltIn(name) {
-    static __g_builtInNames
-    if (!__g_builtInNames) {
-        __g_builtInNames:=["_NewEnum", "methods", "HasKey", "__g_noVerification", "Clone", "GetAddress", "SetCapacity", "GetCapacity", "MinIndex", "MaxIndex", "Length", "Delete", "Push", "Pop", "InsertAt", "RemoveAt", "base", "__Set", "__Get", "__Call", "__New", "__Init", "_ahkUtilsIsInitialized"]
+    static z__gutils_builtInNames
+    if (!z__gutils_builtInNames) {
+        z__gutils_builtInNames:=["_NewEnum", "methods", "HasKey", "z__gutils_noVerification", "Clone", "GetAddress", "SetCapacity", "GetCapacity", "MinIndex", "MaxIndex", "Length", "Delete", "Push", "Pop", "InsertAt", "RemoveAt", "base", "__Set", "__Get", "__Call", "__New", "__Init", "_ahkUtilsIsInitialized"]
     }
-    for i, x in __g_builtInNames {
+    for i, x in z__gutils_builtInNames {
         if (x = name) {
             return True
         }
@@ -115,7 +115,7 @@ gLang_IsNameBuiltIn(name) {
 ; The class implements __Get, __Call, and __Set.
 class gDeclaredMembersOnly {
     __Call(name, params*) {
-        if (!gLang_IsNameBuiltIn(name) && !this.__g_noVerification) {
+        if (!gLang_IsNameBuiltIn(name) && !this.z__gutils_noVerification) {
             gEx_Throw("Tried to call undeclared method '" name "'.")
         } 
     }
@@ -126,38 +126,38 @@ class gDeclaredMembersOnly {
 
     __Init() {
         ; We want to disable name verification to allow the extending object's initializer to safely initialize the type's fields.
-        if (this.__g_noVerification) {
+        if (this.z__gutils_noVerification) {
             return
         }
-        this.__g_noVerification := true
+        this.z__gutils_noVerification := true
 
         this.__Init()
-        this.Delete("__g_noVerification")
+        this.Delete("z__gutils_noVerification")
     }
 
     __Get(name) {
-        if (!gLang_IsNameBuiltIn(name) && !this.__g_noVerification) {
+        if (!gLang_IsNameBuiltIn(name) && !this.z__gutils_noVerification) {
             gEx_Throw("Tried to get the value of undeclared member '" name "'.")
         }
     }
 
     __Set(name, values*) {
-        if (!gLang_IsNameBuiltIn(name) && !this.__g_noVerification) {
+        if (!gLang_IsNameBuiltIn(name) && !this.z__gutils_noVerification) {
             gEx_Throw("Tried to set the value of undeclared member '" name "'.")
         }
     }
 
     __DisableVerification() {
-        ObjRawSet(this, "__g_noVerification", true)
+        ObjRawSet(this, "z__gutils_noVerification", true)
     }
 
     __EnableVerification() {
-        this.Delete("__g_noVerification")
+        this.Delete("z__gutils_noVerification")
     }
 
     __IsVerifying {
         get {
-            return !this.HasKey("__g_noVerification")
+            return !this.HasKey("z__gutils_noVerification")
         }
     }
 

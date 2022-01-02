@@ -158,15 +158,15 @@ gStr_LastIndexOf(ByRef where, ByRef what, case := false, pos := 1) {
 }
 
 gStr_SplitAt(ByRef where, pos) {
-    pos := __g_NormalizeIndex(pos, StrLen(where))
+    pos := z__gutils_NormalizeIndex(pos, StrLen(where))
     first := gStr_Slice(where, pos - 1)
     last := gStr_Slice(where, pos + 1)
     return [first, last]
 }
 
 gStr_Slice(ByRef where, start := 1, end := 0) {
-    start := __g_NormalizeIndex(start, StrLen(where))
-    end := __g_NormalizeIndex(end, StrLen(where))
+    start := z__gutils_NormalizeIndex(start, StrLen(where))
+    end := z__gutils_NormalizeIndex(end, StrLen(where))
     return SubStr(where, start, end - start + 1)
 }
 
