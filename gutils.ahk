@@ -1693,7 +1693,7 @@ __g_assertOut(line) {
 
     FileAppend, % "`r`n" line , *, UTF-8
 }
-__g_reportAssertionResults() {
+__g_reportAssertionResults(z := "") {
     fail := __g_assertResults.fail
     pass := __g_assertResults.pass
     line := gStr_Repeat("═", 50)
