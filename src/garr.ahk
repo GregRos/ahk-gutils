@@ -8,6 +8,7 @@ gArr_Repeat(item, count) {
     return arr
 }
 
+; Gets the index of the item `what` in `arr`
 gArr_IndexOf(arr, what) {
     for ix, value in arr {
         if(what = value) {

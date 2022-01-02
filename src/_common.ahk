@@ -103,7 +103,7 @@ class gDeclaredMembersOnly {
 ; Class primarily for reference, demonstrating the fields FancyEx supports/cares about for exceptions.
 ; The Extra field is used internally and you shouldn't use it.
 ; Any additional fields are also printed, using 
-class FancyException {
+class FancyExceptio n {
     __New(type, message, innerEx := "", data := "") {
         this.Message := message
         this.InnerException := innerEx

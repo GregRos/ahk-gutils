@@ -2,7 +2,6 @@ gLang_VarExists(ByRef var) {
     return &var = &something ? 0 : var = "" ? 2 : 1 
 }
 
-
 gLang_Func(funcOrName) {
     if (IsObject(funcOrName)) {
         return funcOrName
