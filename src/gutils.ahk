@@ -10,11 +10,11 @@
 #include gwin.ahk
 #include gsys.ahk
 #include greg.ahk
-#include gex.ahk
+#include goops.ahk
 #include gassert.ahk
 
-gUtils(checkMore := False) {
-    if (checKMore) {
-        gUtils_MoreChecks()
+gUtils(goops := False) {
+    if (goops) {
+        gOops_Setup()
     }
 }

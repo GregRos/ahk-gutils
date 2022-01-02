@@ -1,5 +1,37 @@
 ﻿#include garr.ahk
 #include gstr.ahk
+#include glang.ahk
+
+global __g_assertResults = {fail: 0, pass: 0}
+
+__g_assertOut(line) {
+    e := Chr("0x001b")
+    line := gStr_Replace(line, "\e", e)
+    FileAppend, % line, *, UTF-8
+}
+__g_reportAssertionResults() {
+    fail := __g_assertResults.fail
+    pass := __g_assertResults.pass
+    line := gStr_Repeat("═", 50)
+    len1 := gStr_Repeat(" ", 7)
+    len2 := gStr_Repeat(" ", 13)
+    finishLine := gStr_Repeat(" ", 18) "🏁 FINISHED 🏁"
+    summaryLine := Format(len1 "\e[31;1m Failed ❌: {1} Passed ✅: {2} Total ❓: {3}", fail, pass, fail + pass)
+    warningLine := fail > 0 ? "SOME ASSERTIONS FAILED" : ""
+    lines := [line
+    , finishLine
+    , line
+    , summaryLine]
+
+    if (fail > 0) {
+        lines.Push("`r`n" len2 "❌ \e[31;1m" warningLine " ❌")
+        lines.Push(line)
+    }
+
+    __g_AssertOut(gStr_Join(lines, "`r`n"))
+
+
+}
 
 __g_AssertLastFrame(entry) {
     return InStr(entry.Function, "gAssert")
@@ -98,31 +130,37 @@ __g_AssertGetArgs() {
     pos := 1
     parsed := __g_ParseParens(outVar, pos)
     unparsed := __g_interpertAsFunctionCall(parsed)
+    justFileName := gPath_Parse(callingFrame.File).filename
+    unparsed.Push(Format("{1}:{2}", justFileName, callingFrame.Line))
     return unparsed
 }
 
 global __g_assertFormats := {}
-
 __g_ReportAssert(success, actual) {
     assertLine := ""
+    if (__g_assertResults.fail = 0 && __g_assertResults.pass = 0) {
+        OnExit(Func("__g_reportAssertionResults"))
+    }
     if (success) {
         assertLine .= "✅ "
+        __g_assertResults.pass += 1
     } else {
         assertLine .= "❌ "
+        __g_assertResults.fail += 1
     }
 
     args := __g_AssertGetArgs()
     format := __g_assertFormats[args[1]]
     if (!format) {
-        Throw "You need to set a format for " args[1]
+        gEx_Throw("You need to set a format for " args[1])
     }
     if (!success) {
         format .= " ACTUAL: " gStr(actual)
 
     }
-    assertLine .= gStr_Indent(Format(format, args*))
+    assertLine .= gStr_Indent(Format(format " [{4}]", args*))
 
-    OutputDebug, % assertLine
+    __g_assertOut(assertLine)
 }
 
 __g_assertFormats.gAssert_True := "{2}"

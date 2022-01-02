@@ -2,9 +2,10 @@
 SendMode Input
 SetWorkingDir, %A_ScriptDir%
 #NoEnv
-#include ..\
-#include gutils.ahk
 
+#include ../src/
+#include gutils.ahk
+gUtils(True)
 __g_findGreater5(x) {
     return x > 5
 }

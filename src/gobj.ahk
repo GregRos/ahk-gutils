@@ -109,7 +109,7 @@ gObj_Omit(obj, keys*) {
 gObj_Assign(target, sources*) {
     for i, source in sources {
         for k, v in source {
-            target[k] = source[v]
+            target[k] := v
         }
     }
 }

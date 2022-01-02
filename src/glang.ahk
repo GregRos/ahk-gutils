@@ -30,7 +30,7 @@ gLang_Func(funcOrName) {
 gLang_Call(funcOrName, args*) {
     funcOrName := gLang_Func(funcOrName)
     if (funcOrName.MinParams > args.MaxIndex()) {
-        Throw "Passed too few parameters for function."
+        gEx_Throw("Passed too few parameters for function.")
     }
     maxParams := funcOrName.MaxParams
     if (maxParams < args.MaxIndex()) {
@@ -41,7 +41,7 @@ gLang_Call(funcOrName, args*) {
 }
 
 ; Represents an entry in a stack trace.
-class StackTraceEntry extends gDeclaredMembersOnly {
+class gStackFrame extends gDeclaredMembersOnly {
     File := ""
     Line := ""
     Function := ""
@@ -167,18 +167,24 @@ class gDeclaredMembersOnly {
         this.__EnableVerification()
         return value
     }
-
 }
 
-; Class primarily for reference, demonstrating the fields FancyEx supports/cares about for exceptions.
-; The Extra field is used internally and you shouldn't use it.
-; Any additional fields are also printed, using 
 class gOopsError {
-    __New(type, message, innerEx := "", data := "") {
+    type := ""
+    message := ""
+    innerEx := ""
+    data := ""
+    trace := []
+    what := ""
+    offset := ""
+    function := ""
+    line := ""
+    __New(type, message, innerEx := "", extra := "") {
         this.Message := message
         this.InnerException := innerEx
-        this.Data := data
+        this.Extra := extra
         this.Type := type
+
     }
 }
 
@@ -201,37 +207,32 @@ gEx_ThrowObj(ex, ignoreLastInTrace := 0) {
 }
 
 gLang_StackTraceObj(ignoreLast := 0) {
-    ; from Coco in http://ahkscript.org/boards/viewtopic.php?f=6&t=6001
-    r := [], i := 0, n := 0
+    ; Originally by Coco in http://ahkscript.org/boards/viewtopic.php?f=6&t=6001
+    frames := []
     Loop
     {
-        e := Exception(".", offset := -(A_Index + n))
-        if (e.What == offset)
+        offset := -A_Index + 1
+        e := Exception(".", offset)
+        if (e.What == offset && offset != 0) {
             break
-        r[++i] := new StackTraceEntry(e.File, e.Line, e.What, offset + n)
-    }
-    lastEntry:= r[1]
-    if (!lastEntry) return []
-    for ix, entry in r {
-        ; I want each entry to contain the *exit location*, not entry location, so it corresponds to part of the function.
-        if (ix = 1) {
-            continue	
         }
-        tmp := lastEntry
-        lastEntry := entry.Clone()
-        entry.File := tmp.File
-        entry.Line := tmp.Line
-        entry.Offset := tmp.Offset
+        frames.Push(new gStackFrame(e.File, e.Line, e.What, offset))
     }
+    ; In this state, the File:Line refer to the place where execution entered What.
+    ; That's actually not very useful. I want it to have What's location instead. So we nbeed
+    ; to shuffle things a bit
 
-    r.Insert(new StackTraceEntry(lastEntry.File, lastEntry.Line, " ", lastEntry.Offset))
-
+    for i in frames {
+        if (i >= frames.MaxIndex()) {
+            break
+        }
+        frames[i].Function := frames[i+1].Function
+    }
     Loop, % ignoreLast + 1
     {
-        r.Remove(1)
+        frames.RemoveAt(1)
     }
-
-    return r
+    return frames
 }
 
 gOut(out) {

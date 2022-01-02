@@ -254,12 +254,16 @@ class gParsedPath extends gDeclaredMembersOnly {
     root := ""
     path := ""
     filename := ""
+    dir := ""
+    fileNoExt := ""
+    ext := ""
+    drive := ""
     __New(path) {
         SplitPath, % path, file, dir, ext, fileNoExt, drive
-        this.filename := filename
+        this.filename := file
         this.dir := dir
-        this.extension := ext
-        this.fileNoExit := fileNoExt
+        this.ext := ext
+        this.fileNoExt := fileNoExt
         this.drive := drive
     }
 }
