@@ -1,4 +1,4 @@
-﻿#include _common.ahk
+﻿#include glang.ahk
 #include garr.ahk
 __g_isObject(name, obj, canBeArray := False) {
     if (!isObject(obj)) {

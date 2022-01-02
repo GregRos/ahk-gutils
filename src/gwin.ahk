@@ -1,4 +1,4 @@
-#include _common.ahk
+#include glang.ahk
 
 gWin_IsFullScreen(winTitle := "") {
     ;checks if the specified window is full screen

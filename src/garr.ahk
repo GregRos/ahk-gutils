@@ -1,4 +1,4 @@
-﻿#include _common.ahk
+﻿#include glang.ahk
 gArr_Repeat(item, count) {
     arr:=[]
     Loop, %count%
@@ -64,19 +64,6 @@ gArr_Concat(arrs*) {
     return c
 }
 
-gArr_Slice(arr, start := 1, end := 0) {
-    result:=[]
-    start:= __g_NormalizeIndex(start, arr.MaxIndex())
-    end:= __g_NormalizeIndex(end, arr.MaxIndex())
-    if (end < start) {
-        return result
-    }
-    Loop, % end - start + 1
-    {
-        result.Insert(arr[start + A_Index - 1])
-    }
-    return result
-}
 
 gArr_Map(arr, projection) {
     projection := gLang_Func(projection)

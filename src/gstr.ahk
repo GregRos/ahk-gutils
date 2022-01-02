@@ -1,4 +1,4 @@
-﻿#include _common.ahk
+﻿#include glang.ahk
 gStr_PadRight(ByRef str, toWidth, char := " ") {
     myLen := StrLen(str)
     extras := toWidth - myLen

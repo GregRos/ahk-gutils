@@ -1,4 +1,4 @@
-#include _common.ahk
+#include glang.ahk
 #include garr.ahk
 #include json.ahk
 __g_setupNonObjectCheck() {
