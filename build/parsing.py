@@ -32,5 +32,6 @@ def resolve_includes(s_filename: str, t_filename: str):
         with open(t_filename, mode="w", encoding="utf8") as t_file:
             t_file.write(m_contents)
             t_file.flush()
+        print(f'\n* Wrote to {t_filename}')
     finally:
         chdir(old_dir)
