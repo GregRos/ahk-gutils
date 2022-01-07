@@ -14,7 +14,6 @@ z__gutils_findGreater5(x) {
 z__gutils_test() {
     gAssert_Eq(gLang_VarExists(bzzt), 0)
     gAssert_Eq(IsObject(gLang_Func("gAssert_Gtr")), True)
-    gex_throw("hi")
     gAssert_Eq(gArr_Repeat("xyz", 3), ["xyz", "xyz", "xyz"])
     gAssert_Eq(gArr_IndexOf([5, 6, 7], 6), 2)
     gAssert_Eq(gArr_Find([5, 6, 7, 8], "z__gutils_findGreater5"), 6)

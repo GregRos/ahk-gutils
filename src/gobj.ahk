@@ -1,34 +1,34 @@
 ﻿#include glang.ahk
 #include garr.ahk
-z__gutils_isObject(name, obj, canBeArray := False) {
-    if (!isObject(obj)) {
-        gEx_Throw("Parameter " name " is not an object: " obj)
+z__gutils_isObject(name, self, canBeArray := False) {
+    if (!isObject(self)) {
+        gEx_Throw("Parameter " name " is not an object: " self)
     }
     if (!canBeArray) {
-        if (obj.MaxIndex() > 0) {
+        if (self.MaxIndex() > 0) {
             gEx_Throw("Parameter " name " is an array.")
         }
     }
 }
 
-gObj_Is(obj) {
-    return IsObject(obj)
+gObj_Is(self) {
+    return IsObject(self)
 }
 
-gObj_HasAnyKey(obj, keys*) {
-    z__gutils_isObject("obj", obj, True)
+gObj_HasAnyKey(self, keys*) {
+    z__gutils_isObject("self", self, True)
     for i, k in keys {
-        if (obj.HasKey(k)) {
+        if (self.HasKey(k)) {
             return True
         }
     }
     return False
 }
 
-gObj_Keys(obj) {
-    z__gutils_isObject("obj", obj, True)
+gObj_Keys(self) {
+    z__gutils_isObject("self", self, True)
     keys := []
-    for k in obj {
+    for k in self {
         keys.Push(k)
     }
     return keys 
@@ -79,46 +79,46 @@ gObj_NewValidator(name, requiredKeys := "", optionalKeys := True) {
     return new gObjValidator(name, requiredKeys, optionalKeys)
 }
 
-gObj_Pick(obj, keys*) {
+gObj_Pick(self, keys*) {
     result := {}
     for i, k in keys {
-        result[k] := obj[k]
+        result[k] := self[k]
     }
     return result
 }
 
-gObj_FromKeys(keys, value := True) {
+gObj_FromKeys(self, value := True) {
     result := {}
-    for i, k in keys {
+    for i, k in self {
         result[k] := value
     }
     return result
 }
 
-gObj_Omit(obj, keys*) {
+gObj_Omit(self, keys*) {
     result := {}
     keysObj := gObj_FromKeys(keys)
-    for i, k in obj {
+    for i, k in self {
         if (!keysObj.HasKey(k)) {
-            result[k] := obj[k]
+            result[k] := self[k]
         }
     }
     return result
 }
 
-gObj_Assign(target, sources*) {
+gObj_Assign(self, sources*) {
     for i, source in sources {
         for k, v in source {
-            target[k] := v
+            self[k] := v
         }
     }
 }
 
-gObj_Defaults(target, sources*) {
+gObj_Defaults(self, sources*) {
     sources := gArr_Reverse(sources)
-    sources.Push(target)
-    obj := gObj_Assign({}, sources*)
-    return obj
+    sources.Push(self)
+    self := gObj_Assign({}, sources*)
+    return self
 }
 
 gObj_Merge(sources*) {

@@ -120,7 +120,7 @@ z__gutils_reportAssertionResults(z := "") {
         }
 
         z__gutils_AssertGetArgs() {
-            traces := gLang_StackTraceObj()
+            traces := gLang_StackTrace()
             lastAssertFrameIndex := gArr_FindLastIndex(traces, "z__gutils_AssertLastFrame")
             lastAssertFrame := traces[lastAssertFrameIndex]
             callingFrame := traces[lastAssertFrameIndex + 1]

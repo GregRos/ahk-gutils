@@ -1,6 +1,7 @@
 #include glang.ahk
 #include garr.ahk
 #include json.ahk
+
 z__gutils_setupNonObjectCheck() {
     rawBase := "".base
     rawBase.__Get := Func("z__gutils_UnknownGet")

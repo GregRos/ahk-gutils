@@ -1,87 +1,98 @@
 ﻿#include glang.ahk
-gArr_Repeat(item, count) {
+; A module for working with arrays.
+
+; Returns an array where `self` appears `count` times, e.g. `[self, self, ...]`
+gArr_Repeat(self, count) {
     arr:=[]
     Loop, %count%
     {
-        arr.Insert(item)
+        arr.Insert(self)
     }
     return arr
 }
 
-; Gets the index of the item `what` in `arr`
-gArr_IndexOf(arr, what) {
-    for ix, value in arr {
-        if(what = value) {
+; Returns the position of the first occurence of `what` in `self`.
+gArr_IndexOf(self, what, case := False) {
+    for ix, value in self {
+        if((!case && what = value) || what == value) {
             return ix
         }
     }
     return 0	
 }
 
-gArr_Has(arr, what) {
-    return gArr_IndexOf(arr, what) > 0
+; Returns true if `self` contains `what` as a substring.
+gArr_Has(self, what) {
+    return gArr_IndexOf(self, what) > 0
 }
 
-gArr_Find(arr, func) {
-    func := gLang_Func(func)
-    return gArr_Filter(arr, func)[1]
+; Returns the find element in `self` that match `predicate`. `predicate` can be a function name or function object.
+gArr_Find(self, predicate) {
+    predicate := gLang_Func(predicate)
+    return gArr_Filter(self, predicate)[1]
 }
 
-gArr_FindIndexes(arr, func) {
+; Returns the positions of all the elements matching `predicate`. `predicate` can be a function name or function object.
+gArr_FindIndexes(self, predicate) {
     results := []
-    func := gLang_Func(func)
-    for index, item in arr {
-        if (gLang_Call(func, item, index)) {
+    predicate := gLang_Func(predicate)
+    for index, item in self {
+        if (gLang_Call(predicate, item, index)) {
             results.push(index)
         }
     }
     return results
 }
 
-gArr_FindIndex(arr, func) {
-    return gArr_FindIndexes(arr, func)[1]
+; Find first position of the element matching `predicate`. `predicate` can be a function name or object.
+gArr_FindIndex(self, predicate) {
+    return gArr_FindIndexes(self, predicate)[1]
 }
 
-gArr_Order(what, options := "N") {
-    str:= gStr_Join(what, "~")
+; Returns the array in sorted order, with the sorting options `options`.
+gArr_Order(self, options := "N") {
+    str:= gStr_Join(self, "~")
     options .= " D~"
     Sort, str, %options%
-    arr:=[]
+    self:=[]
     Loop, Parse, str, ~ 
     {
-        arr.Insert(A_LoopField)
+        self.Insert(A_LoopField)
     }
-    return arr	
+    return self	
 }
 
+; Returns a new array that's a concatenation of all the arrays in `arrs`.
 gArr_Concat(arrs*) {
     c := []
-    for i, arr in arrs {
-        for j, item in arr {
+    for i, self in arrs {
+        for j, item in self {
             c.Push(item)
         }
     }
     return c
 }
 
-
-gArr_Map(arr, projection) {
+; returns a new array that's the result of applying `projection` on every element. `projection` can be a funciton name or object.
+gArr_Map(self, projection) {
     projection := gLang_Func(projection)
     result := []
-    for index, item in arr {
+    for index, item in self {
         result.Push(gLang_Call(projection, item, index))
     }
     return result
 }
 
-gArr_Take(arr, n) {
-    return gArr_Slice(arr, 1, n)
+; Returns the first slice of `n` elements.
+gArr_Take(self, n) {
+    return gArr_Slice(self, 1, n)
 }
 
-gArr_Filter(arr, filter) {
+; Returns a new array that's made of all the elements matching `filter`. `filter` can be a function name or object.
+gArr_Filter(self, filter) {
     filter := gLang_Func(filter)
     result := []
-    for index, item in arr {
+    for index, item in self {
         if (gLang_Call(filter, item, index)) {
             result.Push(item)
         }
@@ -89,27 +100,31 @@ gArr_Filter(arr, filter) {
     return result
 }
 
-gArr_FindLastIndex(arr, filter) {
-    arr := gArr_FindIndexes(arr, filter)
-    return arr[arr.MaxIndex()]
+; Returns the last element matching `predicate`. `predicate` can be a function name or object.
+gArr_FindLastIndex(self, predicate) {
+    self := gArr_FindIndexes(self, predicate)
+    return self[self.MaxIndex()]
 }
 
-gArr_Is(arr) {
-    return IsObject(arr) && arr.MaxIndex() != ""
+; Returns true if `self` is an array.
+gArr_Is(self) {
+    return IsObject(self) && self.MaxIndex() != ""
 }
 
-gArr_Reverse(arr) {
+; Returns a new array that's `self` in reverse order.
+gArr_Reverse(self) {
     newArr := []
-    Loop, % arr.MaxIndex()
+    Loop, % self.MaxIndex()
     {
-        newArr.Push(arr[arr.MaxIndex() - A_Index + 1])
+        newArr.Push(self[self.MaxIndex() - A_Index + 1])
     }
     return newArr
 }
 
-gArr_Flatten(arr) {
+; Recursively flattens an array with array elements into an array of non-array elements.
+gArr_Flatten(self) {
     total := []
-    for i, item in arr {
+    for i, item in self {
         if (gArr_Is(item)) {
             total.Push(gArr_Flatten(item)*)
         } else {

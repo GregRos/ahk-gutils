@@ -1,38 +1,38 @@
 ﻿#include glang.ahk
-gStr_PadRight(ByRef str, toWidth, char := " ") {
-    myLen := StrLen(str)
+gStr_PadRight(ByRef self, toWidth, char := " ") {
+    myLen := StrLen(self)
     extras := toWidth - myLen
     if (extras <= 0) {
-        return str
+        return self
     }
     padding := gStr_Repeat(char, extras)
-    result := str padding
+    result := self padding
     return result
 }
 
-gStr_PadLeft(ByRef str, toWidth, char := " ") {
-    myLen := StrLen(str)
+gStr_PadLeft(ByRef self, toWidth, char := " ") {
+    myLen := StrLen(self)
     extras := toWidth - myLen
     if (extras <= 0) {
-        return str
+        return self
     }
     padding := gStr_Repeat(char, extras)
-    result := padding str 
+    result := padding self 
     return result
 }
 
-gStr_ToChars(ByRef str) {
+gStr_ToChars(ByRef self) {
     list:=[]
-    Loop, Parse, str 
+    Loop, Parse, self 
     {
         list.Insert(A_LoopField)
     }
     return list
 }
 
-gStr_Indent(ByRef str, indent = " ", count = 1) {
-    if (!str) {
-        return str
+gStr_Indent(ByRef self, indent = " ", count = 1) {
+    if (!self) {
+        return self
     }
     indentStr := ""
     Loop, % count
@@ -41,26 +41,26 @@ gStr_Indent(ByRef str, indent = " ", count = 1) {
     }
     indented := ""
 
-    StringReplace, indented, str, `n, `n%indentStr%, All
+    StringReplace, indented, self, `n, `n%indentStr%, All
     indented:=indentStr indented
     return indented
 }
 
-gStr_StartsWith(ByRef where, ByRef what, caseSensitive = 0) {
+gStr_StartsWith(ByRef self, ByRef what, caseSensitive = 0) {
     if (what == "") {
         return true
     }
     len := StrLen(what)
-    initial := SubStr(where, 1, len)
+    initial := SubStr(self, 1, len)
     return caseSensitive ? initial == what : initial = what
 }
 
-gStr_EndsWith(ByRef where, ByRef what, caseSensitive = 0) {
+gStr_EndsWith(ByRef self, ByRef what, caseSensitive = 0) {
     if (what == "") {
         return true
     }
     len := StrLen(what)
-    final := gStr_Slice(where, -len+1)
+    final := gStr_Slice(self, -len+1)
     return caseSensitive ? final == what : final = what
 }
 
@@ -79,8 +79,8 @@ gStr(obj) {
     return "{`n" gSTr_Indent(gStr_Join(stringified, ",`n"), " ", 1) "`n}"
 }
 
-gStr_Join(ByRef what, sep:="", omit:="") {
-    for ix, value in what {
+gStr_Join(ByRef self, sep:="", omit:="") {
+    for ix, value in self {
         if (!gStr_Is(value)) {
             value := gStr_Join(value, sep, omit)
         }
@@ -93,35 +93,35 @@ gStr_Join(ByRef what, sep:="", omit:="") {
     return res
 }
 
-gStr_Trim(ByRef what, chars := " `t") {
-    return Trim(what, chars)
+gStr_Trim(ByRef self, chars := " `t") {
+    return Trim(self, chars)
 }
 
-gStr_TrimLeft(ByRef what, chars := " `t") {
-    return LTrim(what, chars)
+gStr_TrimLeft(ByRef self, chars := " `t") {
+    return LTrim(self, chars)
 }
 
-gStr_TrimRight(ByRef what, chars := " `t") {
-    return RTrim(what, chars)
+gStr_TrimRight(ByRef self, chars := " `t") {
+    return RTrim(self, chars)
 }
 
-gStr_Len(ByRef what) {
-    return StrLen(what)
+gStr_Len(ByRef self) {
+    return StrLen(self)
 }
 
-gStr_Repeat(ByRef what, count, delim := "") {
+gStr_Repeat(ByRef self, count, delim := "") {
     result := ""
     Loop, % count 
     {
         if (A_Index != 1) {
             result .= delim
         }
-        result.= what
+        result.= self
     }
     return result
 }
 
-gStr_IndexesOf(ByRef where, ByRef what, case := false) {
+gStr_IndexesOf(ByRef self, ByRef what, case := false) {
     arr := []
     occur := 1
     last := ""
@@ -129,18 +129,18 @@ gStr_IndexesOf(ByRef where, ByRef what, case := false) {
         if (last != "") {
             arr.Push(last)
         }
-        last := gStr_IndexOf(where, what, case, A_Index)
+        last := gStr_IndexOf(self, what, case, A_Index)
     } until last = 0
     return arr
 }
 
-gStr_IndexOf(ByRef where, ByRef what, case := false, pos := 1, occurrence := 1) {
-    return InStr(where, what, case, pos, occurrence)
+gStr_IndexOf(ByRef self, ByRef what, case := false, pos := 1, occurrence := 1) {
+    return InStr(self, what, case, pos, occurrence)
 }
 
-gStr_Reverse(ByRef what) {
+gStr_Reverse(ByRef self) {
     str := ""
-    Loop, Parse, % what 
+    Loop, Parse, % self 
     {
         str := A_LoopField str
     }
@@ -148,30 +148,30 @@ gStr_Reverse(ByRef what) {
     return str
 }
 
-gStr_LastIndexOf(ByRef where, ByRef what, case := false, pos := 1) {
+gStr_LastIndexOf(ByRef self, ByRef what, case := false, pos := 1) {
     cur := 0
     loop {
         last := cur
-        cur := gStr_IndexOf(where, what, case, cur + 1)
+        cur := gStr_IndexOf(self, what, case, cur + 1)
     } until cur = 0
     return last
 }
 
-gStr_SplitAt(ByRef where, pos) {
-    pos := z__gutils_NormalizeIndex(pos, StrLen(where))
-    first := gStr_Slice(where, pos - 1)
-    last := gStr_Slice(where, pos + 1)
+gStr_SplitAt(ByRef self, pos) {
+    pos := z__gutils_NormalizeIndex(pos, StrLen(self))
+    first := gStr_Slice(self, pos - 1)
+    last := gStr_Slice(self, pos + 1)
     return [first, last]
 }
 
-gStr_Slice(ByRef where, start := 1, end := 0) {
-    start := z__gutils_NormalizeIndex(start, StrLen(where))
-    end := z__gutils_NormalizeIndex(end, StrLen(where))
-    return SubStr(where, start, end - start + 1)
+gStr_Slice(ByRef self, start := 1, end := 0) {
+    start := z__gutils_NormalizeIndex(start, StrLen(self))
+    end := z__gutils_NormalizeIndex(end, StrLen(self))
+    return SubStr(self, start, end - start + 1)
 }
 
-gStr_Split(what, delimeters := "", omit := "", max := -1) {
-    return StrSplit(what, delimeters, omit, max)
+gStr_Split(self, delimeters := "", omit := "", max := -1) {
+    return StrSplit(self, delimeters, omit, max)
 }
 
 gStr_FromCodeArray(wArray) {
@@ -209,30 +209,30 @@ gStr_Guid() {
     return h
 }
 
-gStr_Lower(ByRef InputVar, T := "") {
-    StringLower, v, InputVar, %T%
+gStr_Lower(ByRef self, T := "") {
+    StringLower, v, self, %T%
     Return, v
 }
 
-gStr_Upper(ByRef InputVar, T := "") {
-    StringUpper, v, InputVar, %T%
+gStr_Upper(ByRef self, T := "") {
+    StringUpper, v, self, %T%
     Return, v
 }
 
-gStr_Replace(ByRef InputVar, ByRef SearchText, ByRef ReplaceText, Limit := -1) {
-    return StrReplace(InputVar, SearchText, ReplaceText, , Limit)
+gStr_Replace(ByRef self, ByRef SearchText, ByRef ReplaceText, Limit := -1) {
+    return StrReplace(self, SearchText, ReplaceText, , Limit)
 }
 
-gStr_Has(ByRef where, ByRef what, Case := false, Start := 1) {
-    return gStr_IndexOf(where, what, Case, Start) > 0
+gStr_Has(ByRef self, ByRef what, Case := false, Start := 1) {
+    return gStr_IndexOf(self, what, Case, Start) > 0
 }
 
-gStr_Is(ByRef what) {
-    return !IsObject(what)
+gStr_Is(ByRef self) {
+    return !IsObject(self)
 }
 
-gStr_At(ByRef what, pos) {
-    return SubStr(what, pos, 1)
+gStr_At(ByRef self, pos) {
+    return SubStr(self, pos, 1)
 }
 
 gStr_Match(haystack, needle, options := "", pos := 1) {
