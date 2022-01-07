@@ -11,10 +11,12 @@ z__gutils_isObject(name, self, canBeArray := False) {
     }
 }
 
+; True if `self` is an object.
 gObj_Is(self) {
     return IsObject(self)
 }
 
+; True if `self` has any of `keys`.
 gObj_HasAnyKey(self, keys*) {
     z__gutils_isObject("self", self, True)
     for i, k in keys {
@@ -25,6 +27,7 @@ gObj_HasAnyKey(self, keys*) {
     return False
 }
 
+; Returns an array of the object's keys.
 gObj_Keys(self) {
     z__gutils_isObject("self", self, True)
     keys := []
@@ -34,6 +37,7 @@ gObj_Keys(self) {
     return keys 
 }
 
+; A class for validating object inputs.
 class gObjValidator extends gDeclaredMembersOnly {
     requiredKeys := ""
     optionalKeys := False
@@ -44,6 +48,7 @@ class gObjValidator extends gDeclaredMembersOnly {
         this.optionalKeys := optionalKeys
     }
 
+    ; Asserts the input passes this validator.
     Assert(obj) {
         result := this.Check(obj)
         if (!result.valid) {
@@ -51,6 +56,7 @@ class gObjValidator extends gDeclaredMembersOnly {
         }
     }
 
+    ; Returns if the input passes this validator.
     Check(obj) {
         if (!gObj_Is(obj)) {
             return {valid: False, reason: "Input not an object: " obj}
@@ -75,10 +81,12 @@ class gObjValidator extends gDeclaredMembersOnly {
     }
 }
 
+; Returns a new validator. Use Validator.Check and Validator.Assert.
 gObj_NewValidator(name, requiredKeys := "", optionalKeys := True) {
     return new gObjValidator(name, requiredKeys, optionalKeys)
 }
 
+; Returns a subset of `self` including only keys from `keys`.
 gObj_Pick(self, keys*) {
     result := {}
     for i, k in keys {
@@ -87,14 +95,16 @@ gObj_Pick(self, keys*) {
     return result
 }
 
-gObj_FromKeys(self, value := True) {
+; Creates an object with all the keys in `keys`, all having the value `value`.
+gObj_FromKeys(keys, value := True) {
     result := {}
-    for i, k in self {
+    for i, k in keys {
         result[k] := value
     }
     return result
 }
 
+; Returns a subset of `self` without keys from `keys`.
 gObj_Omit(self, keys*) {
     result := {}
     keysObj := gObj_FromKeys(keys)
@@ -106,6 +116,7 @@ gObj_Omit(self, keys*) {
     return result
 }
 
+; Assigns all the keys from sources, in order, to `self`.
 gObj_Assign(self, sources*) {
     for i, source in sources {
         for k, v in source {
@@ -114,6 +125,7 @@ gObj_Assign(self, sources*) {
     }
 }
 
+; Returns a new object with defaults from `sources`.
 gObj_Defaults(self, sources*) {
     sources := gArr_Reverse(sources)
     sources.Push(self)
@@ -121,6 +133,7 @@ gObj_Defaults(self, sources*) {
     return self
 }
 
+; Returns an object with all the key-value pairs in `sources`.
 gObj_Merge(sources*) {
     return gObj_Assign({}, sources*)
 }

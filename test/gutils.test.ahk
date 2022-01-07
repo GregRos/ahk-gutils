@@ -46,8 +46,8 @@ z__gutils_test() {
     gAssert_eq(gStr_Trim("aba", "a"), "b")
     gAssert_eq(gStr_TrimLeft("aba", "a"), "ba")
     gAssert_Eq(gStr_TrimRight("aba", "a"), "ab")
-    gAssert_eq(gStr_FromChars(["a", "b", "c"]), "abc")
-    gAssert_Eq(gStr_FromCodeArray([asc("a"), asc("b"), asc("c")]), "abc")
+    gAssert_eq(gStr_OfChars(["a", "b", "c"]), "abc")
+    gAssert_Eq(gStr_OfCodes([asc("a"), asc("b"), asc("c")]), "abc")
     gAssert_Eq(gStr_Replace("aaabbb", "a", "b", 2), "bbabbb")
     gAssert_Eq(gStr_ToChars("abc"), ["a", "b", "c"])
 

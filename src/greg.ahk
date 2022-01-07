@@ -72,9 +72,11 @@ z__gutils_checkKeyExists(rootedKey) {
     return False
 }
 
+; A registry key.
 class gRegKey extends gDeclaredMembersOnly {
     root := ""
     subKey := ""
+    ; Create a new gRegKey. parts - one or more path parts of the key. Path must be rooted.
     __New(parts*) {
         root := parts[1]
         this.root := z__gutils_noramlizeRoot(root)
@@ -84,18 +86,21 @@ class gRegKey extends gDeclaredMembersOnly {
         }
     }
 
+    ; Gets if this object is a registry key.
     IsKey {
         get {
             return True
         }
     }
 
+    ; Gets if this key is a root key.
     IsRoot {
         get {
             return this.subkey == ""
         }
     }
 
+    ; Gets the complete, joined form of this key.
     Key {
         get {
             if (!this.subkey) {
@@ -105,8 +110,7 @@ class gRegKey extends gDeclaredMembersOnly {
         }
     }
 
-    ; Gets a subkey 
-    ; @param subkeys ...string[] Path components that appear in order. They will be rooted at the current key.
+    ; Gets a subkey relative to this tree. Parts - the parts of the path from this key. You can use '..'.
     Child(parts*) {
         joined := gPath_Join(parts*)
         resolved := z__gutils_resolveRegPath(this.Key, joined)
@@ -118,6 +122,7 @@ class gRegKey extends gDeclaredMembersOnly {
         return child
     }
 
+    ; Gets the key that's the parent of this key, or throws if this key is a root.
     Parent {
         get {
             if (this.IsRoot) {
@@ -129,6 +134,7 @@ class gRegKey extends gDeclaredMembersOnly {
         }
     }
 
+    ; Gets all the direct child keys of this key.
     Children() {
         arr := []
         Loop, Reg, % this.key, K
@@ -138,6 +144,7 @@ class gRegKey extends gDeclaredMembersOnly {
         return arr
     }
 
+    ; Gets an object consisting of all the values of this key.
     Values() {
         values := {}
         Loop, Reg, % this.Key, V
@@ -149,6 +156,7 @@ class gRegKey extends gDeclaredMembersOnly {
         return values
     }
 
+    ; Removes a value from this key. Cannot remove the default value.
     EraseValue(name) {
         if (name = "") {
             gEx_Throw("The value name cannot be empty.")
@@ -160,6 +168,7 @@ class gRegKey extends gDeclaredMembersOnly {
         }
     }
 
+    ; Deletes this key and all its data.
     Erase() {
         if (this.IsRoot) {
             gEx_Throw("You can't delete a root.")
@@ -171,6 +180,7 @@ class gRegKey extends gDeclaredMembersOnly {
         }
     }
 
+    ; Creates a child key with the path from `parts`.
     Create(parts*) {
         fullKey := z__gutils_resolveRegPath(this.Key, parts*)
         if (z__gutils_checkKeyExists(fullKey)) {
@@ -188,11 +198,13 @@ class gRegKey extends gDeclaredMembersOnly {
         return new gRegKey(parsed[1], parsed[2])
     }
 
+    ; True if this key has a child key with the path from `parts`.
     Has(parts*) {
         parts.InsertAt(1, this.key)
         return z__gutils_checkKeyExists(gPath_Join(parts))
     }
 
+    ; True if this key has a value called `name`.
     HasV(name) {
         Loop, Reg, % this.Key, V
         {
@@ -202,6 +214,7 @@ class gRegKey extends gDeclaredMembersOnly {
         }
     }
 
+    ; Gets the value of `name`.
     Get(name := "") {
         try {
             RegRead, X, % this.Key, % name
@@ -211,6 +224,7 @@ class gRegKey extends gDeclaredMembersOnly {
         }
     }
 
+    ; Overwrites a value named `name` on this key.
     Set(name, type, value) {
         if (!gArr_Has(["REG_SZ", "REG_EXPAND_SZ", "REG_MULTI_SZ", "REG_DWORD", "REG_BINARY"], type)) {
             gEx_Throw("Type " type " is not a legal regisry value type.")
@@ -224,7 +238,9 @@ class gRegKey extends gDeclaredMembersOnly {
 
 }
 
-gReg(key) {
+; Returns an object referencing the given key.
+gReg(parts*) {
+    key := gPath_Join(parts*)
     if (!z__gutils_checkKeyExists(key)) {
         gEx_Throw(Format("Key '{1}' doesn't exist.", key))
     }
@@ -232,6 +248,7 @@ gReg(key) {
     return new gRegKey(parsed[1], parsed[2])
 }
 
+; Returns true if `obj` is a registry key object.
 gReg_Is(obj) {
     return obj.base = gRegKey
 }

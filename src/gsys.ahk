@@ -1,4 +1,6 @@
 #include glang.ahk
+
+; An invoker for handily invoking virtual methods.
 class gVtableInvoker extends gDeclaredMembersOnly {
     _ref := ""
     _onDispose := []
@@ -28,16 +30,19 @@ class gVtableInvoker extends gDeclaredMembersOnly {
     }
 }
 
+; Returns an invoker for COM vtable calls.
 gSys_ComInvoker(ref, dependencies := "") {
     return new gVtableInvoker(ref, dependencies)
 }
 
+; Get the current PID.
 gSys_Pid() {
     return DllCall("GetCurrentProcessId")	
 }
 
 global z__gutils_wmi := ComObjGet("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2") 
 
+; Returns info about process with `pid`, or the current process.
 gSys_GetProcessInfo(pid := "") {
     if (pid = "") {
         pid := gSys_Pid()
@@ -53,6 +58,7 @@ gSys_GetProcessInfo(pid := "") {
     }
 }
 
+; Returns the parent process of `pid`.
 gSys_GetParentPid(pid) {
     query = Select ParentProcessId From Win32_Process where ProcessId = %pid%
     results := z__gutils_wmi.ExecQuery(query)._NewEnum()

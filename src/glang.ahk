@@ -25,7 +25,7 @@ gLang_Func(funcOrName) {
     }
     result := Func(funcOrName)
     if (!result) {
-        gEx_Throw("Name wasn't a known function.")
+        gEx_Throw("Name '" funcOrName "' wasn't a known function.")
     }
     return result
 }
@@ -38,7 +38,6 @@ gLang_Call(funcOrName, args*) {
     }
     maxParams := funcOrName.MaxParams
     if (maxParams < args.MaxIndex()) {
-
         args := gArr_Slice(args, maxParams)
     }
     return funcOrName.Call(args*)
@@ -276,4 +275,18 @@ gLang_Equal(a, b, case := False) {
         return True
     }
     return False
+}
+
+z__gutils_assertArray(obj) {
+    if (!gArr_Is(obj)) {
+        gEx_Throw("Input must be an array. Was: " obj)
+    }
+}
+
+z__gutils__assertNotObject(objs*) {
+    for i, obj in objs {
+        if (IsObject(obj)) {
+            gEx_Throw("Input expected not to be an object: " obj)
+        }
+    }
 }

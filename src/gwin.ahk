@@ -1,5 +1,6 @@
 #include glang.ahk
 
+; Returns true if the window identified by `winTitle` is full screen.
 gWin_IsFullScreen(winTitle := "") {
     ;checks if the specified window is full screen
     ;code from NiftyWindows source
@@ -27,6 +28,7 @@ gWin_IsFullScreen(winTitle := "") {
     return false
 }
 
+; Returns true if the mouse cursor is visible.
 gWin_IsMouseCursorVisible() {
     StructSize := A_PtrSize + 16
     VarSetCapacity(InfoStruct, StructSize)
@@ -39,6 +41,7 @@ gWin_IsMouseCursorVisible() {
 z__gutils_MatchingInfoKeys := ["speed", "mode", "hiddenWindows", "hiddenText", "title", "text", "excludeTitle", "excludeText"]
 global z__gutils_MatchingInfoValidator := gObj_NewValidator("MatchingInfo", [], z__gutils_MatchingInfoKeys)
 
+; Returns the matching info of the current thread, e.g. A_DetectHiddenWindows.
 gWin_GetMatchingInfo() {
     return {hiddenWindows: A_DetectHiddenWindows, hiddenText: A_DetectHiddenText, speed: A_TitleMatchModeSpeed, mode: A_TitleMatchMode}
 }
@@ -50,6 +53,7 @@ z__gutils_maybeSetMatchingInfo(obj) {
     return gWin_SetMatchingInfo(obj)
 }
 
+; Sets the current matching info from `infoObj`.
 gWin_SetMatchingInfo(infoObj) {
     z__gutils_MatchingInfoValidator.Assert(infoObj)
     modified := False
@@ -78,6 +82,7 @@ z__gutils_WinGet(hwnd, subCommand) {
     return v
 }
 
+; A reference to a specific window that lets you gets info about it.
 class gWinInfo extends gDeclaredMembersOnly {
     hwnd := ""
 
@@ -94,18 +99,21 @@ class gWinInfo extends gDeclaredMembersOnly {
         return v
     }
 
+    ; The window's owner process PID.
     PID {
         get {
             return this._winGet("PID")
         }
     }
 
+    ; The name of the window's owner process.
     ProcessName {
         get {
             return this._winGet("ProcessName")
         }
     }
 
+    ; The path to the window's owner process.
     ProcessPath {
         get {
             return this._winGet("ProcessPath")
@@ -136,12 +144,14 @@ class gWinInfo extends gDeclaredMembersOnly {
         }
     }
 
+    ; Whether the window if minimized or maximized.
     MinMax {
         get {
             return this._winGet("MinMax")
         }
     }
 
+    ; The window's title.
     Title {
         get {
             WinGetTitle, v, % this._winTitle()
@@ -149,6 +159,7 @@ class gWinInfo extends gDeclaredMembersOnly {
         }
     }
 
+    ; The window's class.
     Class {
         get {
             WinGetClass, v, % this._winTitle()
@@ -156,6 +167,7 @@ class gWinInfo extends gDeclaredMembersOnly {
         }
     }
 
+    ; The window's position and size info.
     Pos {
         get {
             WinGetPos, X, Y, Width, Height, % this._winTitle()
@@ -166,12 +178,14 @@ class gWinInfo extends gDeclaredMembersOnly {
         }
     }
 
+    ; Whether the window is active.
     IsActive {
         get {
             return WinActive(this._winTitle())
         }
     }
 
+    ; The window's text.
     Text {
         get {
             WinGetText, v, % this._winTitle()
@@ -179,26 +193,31 @@ class gWinInfo extends gDeclaredMembersOnly {
         }
     }
 
+    ; The window's Hwnd.
     ID {
         get {
             return this.hwnd
         }
     }
 
+    ; Whether the window still exists.
     Exists {
         get {
             return WinExist(this._winTitle()) > 0
         }
     }
 
+    ; Hides the window.
     Hide() {
         WinHide, % this._winTitle()
     }
 
+    ; Unhides the window.
     Show() {
         WinShow, % this._winTitle()
     }
 
+    ; Kills the window.
     Kill() {
         WinKill, % this._winTitle()
     }
@@ -229,6 +248,7 @@ class gWinInfo extends gDeclaredMembersOnly {
 
 }
 
+; Performs a query on windows given query object `query`, returning the first matching window.
 gWin_Get(query) {
     z__gutils_MatchingInfoValidator.Assert(query)
     old := gWin_SetMatchingInfo(query)
@@ -243,6 +263,7 @@ gWin_Get(query) {
     }
 }
 
+; Performs a window query and returns all matching window objects.
 gWin_List(query) {
     z__gutils_MatchingInfoValidator.Assert(query)
     WinGet, win, List, % query.title, % query.text, % query.excludeTitle, % query.excludeText
@@ -254,6 +275,7 @@ gWin_List(query) {
     v := arr
 }
 
+; WinWait on the first window matching the query.
 gWin_Wait(query, timeout := "") {
     z__gutils_MatchingInfoValidator.Assert(query)
     old := gWin_SetMatchingInfo(query)
