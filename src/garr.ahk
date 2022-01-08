@@ -63,7 +63,7 @@ gArr_FindIndex(self, predicate) {
 ; Returns the array in sorted order, with the sorting options `options`.
 gArr_Order(self, options := "N") {
     z__gutils_assertArray(self)
-    str:= gStr_Join(self, "~")
+    str:= gArr_Join(self, "~")
     options .= " D~"
     Sort, str, %options%
     self:=[]
@@ -158,4 +158,21 @@ gArr_Flatten(self) {
         }
     }
     return total
+}
+
+; Joins an array of strings `self`, with separator `self`.
+gArr_Join(self, sep:="", omit:="") {
+    z__gutils__assertNotObject(sep, omit)
+    z__gutils_assertArray(self)
+    for ix, value in self {
+        if (!gStr_Is(value)) {
+            value := gStr(value)
+        }
+        if (A_Index != 1) {
+            res .= sep
+        }
+        value := Trim(value, omit)
+        res .= value
+    }
+    return res
 }

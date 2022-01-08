@@ -84,30 +84,13 @@ gStr(obj) {
     }
     if (obj.MaxIndex() != "") {
         stringified := gArr_Map(obj, "gStr")
-        return "[" gStr_Join(stringified, ", ") "]"
+        return "[" gArr_Join(stringified, ", ") "]"
     }
     stringified := []
     for key, value in obj {
         stringified.Push(Format("{1}: {2}", key, gStr(value)))
     }
-    return "{`n" gSTr_Indent(gStr_Join(stringified, ",`n"), " ", 1) "`n}"
-}
-
-; Joins an array of strings `self`, with separator `self`.
-gStr_Join(ByRef self, sep:="", omit:="") {
-    z__gutils__assertNotObject(sep, omit)
-    z__gutils_assertArray(self)
-    for ix, value in self {
-        if (!gStr_Is(value)) {
-            value := gStr_Join(value, sep, omit)
-        }
-        if (A_Index != 1) {
-            res .= sep
-        }
-        value := Trim(value, omit)
-        res .= value
-    }
-    return res
+    return "{`n" gSTr_Indent(gArr_Join(stringified, ",`n"), " ", 1) "`n}"
 }
 
 gStr_Trim(ByRef self, chars := " `t") {
@@ -262,7 +245,7 @@ gStr_Upper(ByRef self, T := "") {
     Return, v
 }
 
-; Replaces in `self`.
+; Returns a new replaced string.
 gStr_Replace(ByRef self, ByRef SearchText, ByRef ReplaceText, Limit := -1) {
     z__gutils__assertNotObject(self, searchText, replaceText, limit)
     return StrReplace(self, SearchText, ReplaceText, , Limit)
@@ -286,8 +269,39 @@ gStr_At(ByRef self, pos) {
     return SubStr(self, pos, 1)
 }
 
+class gRegEx {
+    search := ""
+    options := ""
+    __New(search, options := "") {
+        this.search := search
+        this.options := options
+        if (!gStr_IndexOf(options, "O")) {
+            this.options := "O"
+        }
+    }
+
+    First(ByRef haystack, pos := 1) {
+        z__gutils__assertNotObject(haystack, pos)
+        needle := options "O)" needle
+        RegExMatch(self, needle, match, pos)
+        return match
+    }
+
+    All(ByRef haystack, pos := 1) {
+        z__gutils__assertNotObject(haystack, pos)
+        array:=[]
+        needle := options "O)" needle
+        while (pos := RegExMatch(self, needle, match, ((pos>=1) ? pos : 1)+StrLen(match.Len(0)))) {
+            array.Push(match)
+        }
+        Return array
+    }
+
+    
+}
+
 ; Returns a match object.
-gStr_Match(self, needle, options := "", pos := 1) {
+gStr_Match(ByRef self, needle, options := "", pos := 1) {
     z__gutils__assertNotObject(self, needle, options, pos)
     needle := options "O)" needle
     RegExMatch(self, needle, match, pos)
@@ -295,7 +309,7 @@ gStr_Match(self, needle, options := "", pos := 1) {
 }
 
 ; Returns an array of match objects.
-gStr_Matches(self, needle, options := "", pos := 1) {
+gStr_Matches(ByRef self, needle, options := "", pos := 1) {
     z__gutils__assertNotObject(self, needle, options, pos)
     array:=[]
     needle := options "O)" needle
@@ -303,6 +317,10 @@ gStr_Matches(self, needle, options := "", pos := 1) {
         array.Push(match)
     }
     Return array
+}
+
+gStr_RegReplace(ByRef self, needle, replacement := "", pos := 1) {
+
 }
 
 ; A path that's been parsed into its components.
@@ -324,33 +342,3 @@ class gParsedPath extends gDeclaredMembersOnly {
     }
 }
 
-; Joins parts of a path with the right separator '\'.
-gPath_Join(parts*) {
-    return gStr_Join(gArr_Flatten(parts), "\")
-}
-
-; Parses a rooted or non-rooted path `path`.
-gPath_Parse(path) {
-    z__gutils__assertNotObject(path)
-    return new gParsedPath(path)
-}
-
-; Resolves relative parts `parts`. Each segment is resolved based on the segment before it, until reaching the CWD. 
-gPath_Resolve(parts*) {
-    z__gutils__assertNotObject(parts*)
-    ; https://www.autohotkey.com/boards/viewtopic.php?t=67050
-    joined := gPath_Join(parts*)
-    cc := DllCall("GetFullPathName", "str", joined, "uint", 0, "ptr", 0, "ptr", 0, "uint")
-    VarSetCapacity(buf, cc*(A_IsUnicode?2:1))
-    DllCall("GetFullPathName", "str", joined, "uint", cc, "str", buf, "ptr", 0, "uint")
-    return buf
-}
-
-; Returns a relative file path based on `from` to the file `to`.
-gPath_Relative(from, to) {
-    z__gutils__assertNotObject(from, to)
-    FILE_ATTRIBUTE_DIRECTORY := 0x10
-    VarSetCapacity(outBuf, 300 * (A_IsUnicode ? 2 : 1))
-    success := DllCall("Shlwapi.dll\PathRelativePathTo", "str", outBuf,  "str", from, "uint", FILE_ATTRIBUTE_DIRECTORY, "str", to, "uint", FILE_ATTRIBUTE_DIRECTORY, "uint")
-    return outBuf
-}

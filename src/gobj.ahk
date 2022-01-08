@@ -137,3 +137,9 @@ gObj_Defaults(self, sources*) {
 gObj_Merge(sources*) {
     return gObj_Assign({}, sources*)
 }
+
+gObj_Aliases(target, aliases) {
+    for k, v in aliases {
+        target[k] := target[v]
+    }
+}

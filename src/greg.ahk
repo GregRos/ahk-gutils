@@ -1,5 +1,5 @@
 #include gstr.ahk
-
+#include gpath.ahk
 z__gutils_noramlizeRoot(root) {
     static z__gutils_roots
     if (!z__gutils_roots) {
@@ -246,9 +246,4 @@ gReg(parts*) {
     }
     parsed := z__gutils_splitRegPath(key)
     return new gRegKey(parsed[1], parsed[2])
-}
-
-; Returns true if `obj` is a registry key object.
-gReg_Is(obj) {
-    return obj.base = gRegKey
 }

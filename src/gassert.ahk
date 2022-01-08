@@ -29,7 +29,7 @@ z__gutils_reportAssertionResults(z := "") {
                 lines.Push(line)
             }
 
-            z__gutils_AssertOut(gStr_Join(lines, "`r`n"))
+            z__gutils_AssertOut(gArr_Join(lines, "`r`n"))
 
         }
 
@@ -73,7 +73,7 @@ z__gutils_reportAssertionResults(z := "") {
             if (gStr_Is(what)) {
                 return what
             }
-            return gStr_Join(gArr_Map(what, "z__gutils_flattenParenBlock"), "")
+            return gArr_Join(gArr_Map(what, "z__gutils_flattenParenBlock"), "")
         }
 
         z__gutils_TrimParens(x) {

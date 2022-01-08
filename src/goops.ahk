@@ -2,6 +2,7 @@
 #include garr.ahk
 #include json.ahk
 
+global z__gutils__nonObjectBase := "".base
 z__gutils_setupNonObjectCheck() {
     rawBase := "".base
     rawBase.__Get := Func("z__gutils_UnknownGet")
@@ -10,7 +11,11 @@ z__gutils_setupNonObjectCheck() {
 }
 global z__gutils_currentError := ""
 global z__gutils_vsCodeProcess := ""
+
 z__gutils_UnknownGet(nonobj, name) {
+    if (name == "base" || name == "__Call") {
+        return z__gutils__nonObjectBase
+    }
     gEx_Throw(Format("Tried to get property '{1}' from non-object value '{2}',", name, nonobj))
 }
 

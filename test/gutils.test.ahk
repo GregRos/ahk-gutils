@@ -10,7 +10,9 @@ z__gutils_findGreater5(x) {
     return x > 5
 }
 
-
+OutputDebug, % "`e"
+EnvGet, hi, ANSICON_VER
+a := 1
 z__gutils_test() {
     gAssert_Eq(gLang_VarExists(bzzt), 0)
     gAssert_Eq(IsObject(gLang_Func("gAssert_Gtr")), True)
@@ -32,7 +34,7 @@ z__gutils_test() {
     gAssert_Eq(gStr_ToChars("abc"), ["a", "b", "c"])
     gAssert_Eq(gStr_Indent("abc`nbcd", "_", 3), "___abc`n___bcd")
     gAssert_Eq(gStr_StartsWith("bxyz", "bx"), True)
-    gAssert_Eq(gStr_Join([" 1", "x2", "3"], "_", "x "), "1_2_3")
+    gAssert_Eq(gArr_Join([" 1", "x2", "3"], "_", "x "), "1_2_3")
     gAssert_Eq(gStr_Repeat("x", 5, ","), "x,x,x,x,x")
     gAssert_Eq(gStR_IndexOf("abc", "b"), 2)
     gAssert_Eq(gStr_Reverse("abc"), "cba")
@@ -75,8 +77,8 @@ z__gutils_test() {
     gAssert_Eq(win.Class, "Chrome_WidgetWin_1")
 
     dllKey := gReg("HKCR\.dll")
-    gAssert_eq(gReg_Is(dllKey), True)
-    gAssert_eq(gReg_Is([]), False)
+    gAssert_eq(gLang_Is(dllKey, "gRegKey"), True)
+    gAssert_eq(gLang_Is([], "gRegKey"), False)
     gAssert_Eq(dllKey.IsKey, True)
     gAssert_eq(dllKey.Get(), "dllfile")
     gAssert_Eq(dllKey.Get("Content Type"), "application/x-msdownload")

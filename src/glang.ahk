@@ -1,3 +1,4 @@
+
 ; Returns a slice of elements from `self` that is `start` to `end`.
 gArr_Slice(self, start := 1, end := 0) {
     result:=[]
@@ -13,10 +14,25 @@ gArr_Slice(self, start := 1, end := 0) {
     return result
 }
 
+z__gutils_isArray(what) {
+    return IsObject(what) && what.MaxIndex() != ""
+}
+
 ; Returns true if `var` refers to an existing variable.
 gLang_VarExists(ByRef var) {
     return &var = &something ? 0 : var = "" ? 2 : 1 
 }
+
+gLang_InstanceOf(self, proto) {
+    Loop 
+    {
+        if (self.base == proto) {
+            return True
+        }
+        self := self.base
+    } until !self.base
+}
+
 
 ; Normalizes function names and objects.
 gLang_Func(funcOrName) {
@@ -33,6 +49,9 @@ gLang_Func(funcOrName) {
 ; Calls `funcOrName` with the arguments `args`. Will also call functions that need fewer arguments.
 gLang_Call(funcOrName, args*) {
     funcOrName := gLang_Func(funcOrName)
+    if (gLang_Is(funcOrName, "BoundFunc")) {
+        return funcOrName.Call(args*)
+    }
     if (funcOrName.MinParams > args.MaxIndex()) {
         gEx_Throw("Passed too few parameters for function.")
     }
@@ -55,11 +74,21 @@ class gStackFrame extends gDeclaredMembersOnly {
         this.Function := function
         this.Offset := offset
     }
+
+    ToString() {
+        x := Format("{1}:{2} {4}+{3} ", e.File, e.Line, e.Function, e.Offset)
+        return x
+    }
 }
 
 z__gutils_printStack(frames) {
-    stringify := gArr_Map(frames, "z__gutils_entryToString")
-    return gStr_Join(stringify, "`n")
+    text := ""
+    for i, frame in frames {
+        if (i != 1) {
+            text .= "`r`n"
+        }
+        text .= frame.ToString()
+    }
 }
 
 z__gutils_entryToString(e) {
@@ -96,9 +125,39 @@ gLang_StackTrace(ignoreLast := 0) {
     }
     return frames
 }
+;https://autohotkey.com/boards/viewtopic.php?p=156419#p156419
 
-; See the classic AHK is operator.
-gLang_Is(ByRef self, type) {
+; See the classic AHK is operator, but with extra supported predicates: 
+; Func, BoundFunc, Object, Array, File, Enum, Primitive, or CLASS NAME.
+gLang_Is(self, type) {
+    static BoundFuncP := NumGet(&(_ := Func("gLang_Is").Bind()), "Ptr")
+    static FileP := NumGet(&(_ := FileOpen("*", "r")), "Ptr")
+    static EnumP := NumGet(&(_ := ObjNewEnum({})), "Ptr")
+    if (type = "func") {
+        return IsObject(self) && IsFunc(self)
+    }
+    if (type = "BoundFunc") {
+        return NumGet(&self, "Ptr") == BoundFuncP
+    }
+    if (type = "Object") {
+        return IsObject(self)
+    }
+    if (type = "primitive") {
+        return !IsObject(self)
+    }
+    if (type = "array") {
+        return IsObject(self) && self.MaxIndex() != ""
+    }
+    if (type = "file") {
+        ; Only system objects can hae 
+        return IsObject(self) && NumGet(&self, "Ptr") == FileP
+    }
+    if (type = "enum") {
+        return IsObject(self) && NumGet(&self, "Ptr") == EnumP
+    }
+    if (IsObject(self)) {
+        return self.__Class = type
+    }
     if self is %type%
     {
         Return true
@@ -137,26 +196,31 @@ gLang_Bool(bool, type := "TrueFalse") {
     gEx_Throw("Unknown normalization type " type)
 }
 
-; Checks if a name is one of the built-in property.
-gLang_IsBasePropertyName(name) {
-    static z__gutils_builtInNames
-    if (!z__gutils_builtInNames) {
-        z__gutils_builtInNames:=["_NewEnum", "methods", "HasKey", "__gutils_noVerification", "Clone", "GetAddress", "SetCapacity", "GetCapacity", "MinIndex", "MaxIndex", "Length", "Delete", "Push", "Pop", "InsertAt", "RemoveAt", "base", "__Set", "__Get", "__Call", "__New", "__Init", "_ahkUtilsIsInitialized"]
-    }
-    for i, x in z__gutils_builtInNames {
-        if (x = name) {
-            return True
-        }
-    }
-    return False
+; 0 - not a built-in name. 1 - built-in object name. 2 - meta function or other special member.
+gLang_IsSpecialName(name) {
+    static builtInNames := {__Call: 2, base : 2
+        , __get: 2, __set: 2
+        ,__new: 2, __gutils_noVerification: 2
+        , __init: 2, __class: 2
+        ,_NewEnum: 1, HasKey: 1
+        ,Clone: 1, GetAddress: 1
+        ,SetCapacity: 1, GetCapacity: 1
+        ,MinIndex: 1, MaxIndex: 1
+        ,Length: 1, Delete: 1
+        ,Push: 1, Pop: 1
+        ,InsertAt: 1,RemoveAt: 1
+    ,Insert: 1, Remove: 1}
+
+    return builtInNames.HasKey(name) ? builtInNames[name] : 0
 }
 
 ; Utility class with name verification services.
 ; Inherit from this if you want your class to only have declared members (methods, properties, and fields assigned in the initializer), so that unrecognized keys will result in an error.
 ; The class implements __Get, __Call, and __Set.
 class gDeclaredMembersOnly {
+
     __Call(name, params*) {
-        if (!gLang_IsBasePropertyName(name) && !ObjRawGet(this, "__gutils_noVerification")) {
+        if (!gLang_IsSpecialName(name) && !ObjRawGet(this, "__gutils_noVerification")) {
             gEx_Throw("Tried to call undeclared method '" name "'.")
         } 
     }
@@ -167,9 +231,10 @@ class gDeclaredMembersOnly {
 
     __Init() {
         ; We want to disable name verification to allow the extending object's initializer to safely initialize the type's fields.
-        if (ObjRawget(this, "__gutils_noVerification")) {
+        if (ObjRawGet(this, "__gutils_noVerification")) {
             return
         }
+        ObjRawSet(this, "__gutils_memberVerification", true)
         ObjRawSet(this, "__gutils_noVerification", true)
 
         this.__Init()
@@ -178,13 +243,13 @@ class gDeclaredMembersOnly {
     }
 
     __Get(name) {
-        if (!gLang_IsBasePropertyName(name) && !ObjRawGet(this, "__gutils_noVerification")) {
+        if (!gLang_IsSpecialName(name) && !ObjRawGet(this, "__gutils_noVerification")) {
             gEx_Throw("Tried to get the value of undeclared member '" name "'.")
         }
     }
 
     __Set(name, values*) {
-        if (!gLang_IsBasePropertyName(name) && !ObjRawGet(this, "__gutils_noVerification")) {
+        if (!gLang_IsSpecialName(name) && !ObjRawGet(this, "__gutils_noVerification")) {
             gEx_Throw("Tried to set the value of undeclared member '" name "'.")
         }
     }
@@ -199,7 +264,7 @@ class gDeclaredMembersOnly {
 
     __IsVerifying {
         get {
-            return !this.HasKey("__gutils_noVerification")
+            return !ObjRawGet(this, "__gutils_noVerification")
         }
     }
 
@@ -248,10 +313,6 @@ gEx_ThrowObj(ex, ignoreLastInTrace := 0) {
     Throw ex
 }
 
-gOut(out) {
-    OutputDebug, % gStr(Out)
-}
-
 ; Recursively determines if a is structurally equal to b.
 gLang_Equal(a, b, case := False) {
     if (!case && a = b) {
@@ -289,4 +350,24 @@ z__gutils__assertNotObject(objs*) {
             gEx_Throw("Input expected not to be an object: " obj)
         }
     }
+}
+
+class gFuncList extends gDeclaredMembersOnly {
+
+    __New(inner) {
+        this._inner := inner
+    }
+
+    Call(args*) {
+        arr := []
+        for i, f in this._inner {
+            arr.Push(f.Call(args*))
+        }
+        return arr
+    }
+
+}
+
+gLang_FuncList(funcs*) {
+    return new gFuncList(funcs)
 }
