@@ -10,9 +10,20 @@ z__gutils_findGreater5(x) {
     return x > 5
 }
 
-OutputDebug, % ObjHasKey(FileOpen("*", "r"), "Length")
-OutputDebug, % z__gutils_getTypeCode({a: 1})
-OutputDebug, % z__gutils_getTypeCode([])
+class Example {
+    Property {
+        get {
+            return "hi"
+        }
+    }
+}
+
+vs := []
+for k, v in (new Example()) {
+    vs.Push(k)
+}
+
+OutputDebug, % gArr_Join(vs)
 a := 1
 z__gutils_test() {
     gAssert_Eq(gLang_VarExists(bzzt), 0)

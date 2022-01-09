@@ -144,3 +144,7 @@ gObj_Aliases(target, aliases) {
     }
 }
 
+gObj_Describe(self) {
+    
+}
+

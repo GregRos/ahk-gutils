@@ -90,6 +90,9 @@ z__gutils_getFormattingKws() {
         , inverse: [7, 27]
     , hidden: [8, 28]}
 
+    for k, arr in styles {
+        arr.Push("style")
+    }
     gObj_Aliases(styles, {r: "reset"
             , b: "bold"
             , d: "dim"
@@ -108,29 +111,31 @@ z__gutils_getFormattingKws() {
         , cyan: [36, 39]
     , white: [37, 39]}
 
+    for k, arr in colors {
+        arr.Push("color")
+    }
+
     brights := {}
     for k, v in colors {
         ; The "bright" colors
         ; e.g black!
-        brights[k + "!"] := [v[1] + 60, v[2]]
+        xs := brights[k + "!"] := [v[1] + 60, v[2]]
+        xs.Push("color")
     }
-    colors := gObj_Assign(colors, brights)
     bgColors := {}
-    for k, v in colors {
+    allColors := gObj_Merge(colors, brights)
+    for k, v in allColors {
         ; the bg colors, e.g. bgblack
-        bgColors["bg" + k] := [v[1] + 10, 49]
+        xs := bgColors["bg" + k] := [v[1] + 10, 49]
+        xs.Push("bgColor")
     }
 
-    colors := gObj_Assign(colors, bgColors)
-
-    styles := gObj_Assign(styles, colors)
-    return styles
+    all := gObj_Merge(styles, colors, brights, bgColors)
+    return all
 }
 
 gOut_ParseAnsi(input) {
-    ; "{!black;bold;bgBlack}hello, my name is{!}"
-    ;     static tokens := 
-    ; }
+    
 }
 
 ; Std - log to std, 

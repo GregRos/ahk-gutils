@@ -14,10 +14,6 @@ gArr_Slice(self, start := 1, end := 0) {
     return result
 }
 
-z__gutils_isArray(what) {
-    return IsObject(what) && what.MaxIndex() != ""
-}
-
 ; Returns true if `var` refers to an existing variable.
 gLang_VarExists(ByRef var) {
     return &var = &something ? 0 : var = "" ? 2 : 1 
@@ -252,7 +248,7 @@ class gDeclaredMembersOnly {
 
     __Get(name) {
         if (!gLang_IsSpecialName(name) && !ObjRawGet(this, "__gutils_noVerification")) {
-            gEx_Throw(Format("Tried to get the value of undeclared name '{1}'.", name)
+            gEx_Throw(Format("Tried to get the value of undeclared name '{1}'.", name))
         }
     }
 
@@ -336,7 +332,6 @@ gLang_Equal(a, b, case := False) {
                 return False
             }
         }
-        return ObjGetBase(a, )
         return True
     }
     return False
@@ -349,17 +344,9 @@ z__gutils_assertType(obj, expectedType) {
     }
 }
 
-z__gutils_assertArray(obj) {
-    if (!gArr_Is(obj)) {
-        gEx_Throw("Input must be an array. Was: " obj)
-    }
-}
-
 z__gutils__assertNotObject(objs*) {
     for i, obj in objs {
-        if (IsObject(obj)) {
-            gEx_Throw("Input expected not to be an object: " obj)
-        }
+        z__gutils_assertType(obj, "Primitive")
     }
 }
 
