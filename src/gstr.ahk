@@ -1,5 +1,5 @@
 ﻿#include glang.ahk
-
+#include gtype.ahk
 ; Returns a new string that's padded to the end, to the width toWidth, using the padding `padding`.
 gStr_PadRight(ByRef self, toWidth, padding := " ") {
     z__gutils__assertNotObject(self, toWidth, padding)
@@ -193,7 +193,7 @@ gStr_Split(ByRef self, delimeters := "", omit := "", max := -1) {
 
 ; Returns from an array of numeric char codes.
 gStr_OfCodes(wArray) {
-    z__gutils_assertType(wArray, "Array")
+    z__gutils_assertType(wArray, "Object")
     result := ""
     for i, x in wArray {
         result .= chr(x)
@@ -203,7 +203,7 @@ gStr_OfCodes(wArray) {
 
 ; Returns a string from an array of strings.
 gStr_OfChars(cArray) {
-    z__gutils_assertType(cArray, "Array")
+    z__gutils_assertType(cArray, "Object")
     result := ""
     for i, x in cArray {
         result .= x
@@ -269,22 +269,6 @@ gStr_At(ByRef self, pos) {
     return SubStr(self, pos, 1)
 }
 
-class gMemberCheckingProxy {
-    _target := ""
-    __New(target) {
-        this._target := target
-        
-    }
-
-    __Set(name, args*) {
-        
-    }
-
-    __Call(name, args*) {
-        
-    }
-}
-
 class gRegEx {
     search := ""
     options := ""
@@ -329,7 +313,7 @@ class gRegEx {
     }
 
     Replace(ByRef haystack, replacement, limit := -1, pos := 1) {
-        if (gLang_Is(haystack, "primitive")) {
+        if (gType_Is(haystack, "primitive")) {
             return RegExReplace(haystack, this.Value,, limit, pos)
         }
         

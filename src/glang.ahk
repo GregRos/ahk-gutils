@@ -1,3 +1,18 @@
+class z__gutils_None {
+    __Get(name, args*) {
+        gEx_Throw(Format("Cannot get '{1}' from a None value.", name))
+    }
+
+    __Call(name, args*) {
+        gEx_Throw(Format("Cannot call '{1}' on a None value.", name))
+    }
+
+    __Set(name, args*) {
+        gEx_Throw(Format("Cannot set '{1}' on a None value.", name))
+    }
+}
+
+z__gutils_None := new z__gutils_None()
 
 ; Returns a slice of elements from `self` that is `start` to `end`.
 gArr_Slice(self, start := 1, end := 0) {
@@ -19,16 +34,6 @@ gLang_VarExists(ByRef var) {
     return &var = &something ? 0 : var = "" ? 2 : 1 
 }
 
-gLang_InstanceOf(self, proto) {
-    Loop 
-    {
-        if (self.base == proto) {
-            return True
-        }
-        self := self.base
-    } until !self.base
-}
-
 ; Normalizes function names and objects.
 gLang_Func(funcOrName) {
     if (IsObject(funcOrName)) {
@@ -44,7 +49,7 @@ gLang_Func(funcOrName) {
 ; Calls `funcOrName` with the arguments `args`. Will also call functions that need fewer arguments.
 gLang_Call(funcOrName, args*) {
     funcOrName := gLang_Func(funcOrName)
-    if (gLang_Is(funcOrName, "BoundFunc")) {
+    if (gType_Is(funcOrName, "BoundFunc")) {
         return funcOrName.Call(args*)
     }
     if (funcOrName.MinParams > args.MaxIndex()) {
@@ -121,52 +126,6 @@ gLang_StackTrace(ignoreLast := 0) {
     return frames
 }
 
-z__gutils_getTypeCode(self) {
-    ptr := NumGet(&self, "Ptr")
-    return ptr
-}
-
-z__gutils_getTypeCodes() {
-    ;https://autohotkey.com/boards/viewtopic.php?p=156419#p156419
-    func := z__gutils_getTypeCode(Func("gLang_Type"))
-    bFunc := z__gutils_getTypeCode(Func("gLang_Type").Bind())
-    file := z__gutils_getTypeCode(FileOpen("*", "r"))
-    enum := z__gutils_getTypeCode(ObjNewEnum({}))
-    RegExMatch("1", "O)1", m)
-    Match := z__gutils_getTypeCode(m)
-    return { (func): "Func", (bFunc): "BoundFunc", (file): "File", (enum): "Enumerator", (Match): "Match"}
-}
-
-; Values - "Func", "BoundFunc", "File", "Enumerator", "Match", "Array", "Object" , "Primitive"
-gLang_Type(self) {
-    static TypeCodes := z__gutils_getTypeCodes()
-    if (!IsObject(self)) {
-        return "Primitive"
-    }
-    knownType := TypeCodes[z__gutils_getTypeCode(self)]
-    if (knownType) {
-        return knownType
-    }
-    if (self.__Class) {
-        return self.__Class
-    }
-    if (self.MaxIndex() != "") {
-        return "Array"
-    }
-    return "Object"
-}
-
-; See the classic AHK is operator, but with extra supported - the return values of gLang_Type
-gLang_Is(self, type) {
-    if (IsObject(self)) {
-        return gLang_Type(self) = type
-    }
-    if self is %type%
-    {
-        Return true
-    }
-}
-
 z__gutils_NormalizeIndex(negIndex, length) {
     if (negIndex <= 0) {
         return length + negIndex
@@ -182,6 +141,36 @@ z_gutils_ToBool(value) {
         return True
     }
     return !!value
+}
+
+z__gutils_Get()
+
+; Gets a value from an object, possibly deep. If the value doesn't exist, it will return gUtils_None.
+gObj_Get(what, key, deep := False) {
+    while (IsObject(what)) {
+        if (ObjHasKey(what, key)) {
+            return ObjRawGet(what, key)
+        }
+        if (!deep) {
+            return gUtils_None
+        }
+        what := ObjGetBase(what)
+    }
+}
+
+
+
+gObj_Has(what, key) {
+    if (z__gutils_getTypeName(what)) {
+        return False
+    }
+    while (IsObject(what)) {
+        if (ObjHasKey(what, key)) {
+            return True
+        }
+        what := ObjGetBase(what)
+    }
+    return False
 }
 
 ; Parses a value as a boolean. `type` determines how to return it. Three modes - OnOff, TrueFalse, TrueFalseString.
@@ -200,7 +189,7 @@ gLang_Bool(bool, type := "TrueFalse") {
 }
 
 ; 0 - not a built-in name. 1 - built-in object name. 2 - meta function or other special member.
-gLang_IsSpecialName(name) {
+gType_IsSpecialName(name) {
     static builtInNames := {__Call: 2, base : 2
         , __get: 2, __set: 2
         ,__new: 2, __gutils_noVerification: 2
@@ -217,6 +206,85 @@ gLang_IsSpecialName(name) {
     return builtInNames.HasKey(name) ? builtInNames[name] : 0
 }
 
+class gMemberCheckingProxy {
+    _target := ""
+    _checking := True
+    __New(target) {
+        tn := z__gutils_getTypeName(target)
+        if (tn != "") {
+            gEx_Throw(Format("Can't create a proxy for '{1}', it's a built-in object.", tn))
+        }
+        this._target := target
+    }
+
+    __Call(name, args*) {
+        target := this._target
+        if (!this._checking) {
+            return target[name].Call(target, args*)
+        }
+        if (target.__Call) {
+            return target.__Call.Call(target, name, args*)
+        }
+        if (gType_IsSpecialName(name)) {
+            ; Can't do checking for special names without hardcoding them
+            return target[name].Call(target, args*)
+        }
+        if (!gObj_Has(target, name)) {
+            gEX_Throw(Format("Tried to call name '{1}', but it doesn't exist.", name))
+        }
+        value := target[name]
+        typeName := z__gutils_getTypeName(value)
+        if (typeName = "Primitive") {
+            gEx_Throw(Format("Tried to call name '{1}', but it was a primitive."))
+        }
+        if (typeName = "BoundFunc") {
+            ; Can't do any checking with BoundFuncs
+            return value.Call(target, args*)
+        }
+
+        if (typeName != "Func") {
+            ; Custom objects will also behave in weird ways...
+            if (gObj_Has(value, "Call")) {
+                return value.Call(target, args*)
+            }
+            ; But this one doesn't have 'Call'
+            gEx_Throw(Format("Tried to call name '{1}', but it was an uncallable object."))
+        }
+        ; This is a Func then we can do some checks
+        if (args.MaxIndex() < value.MinParams) {
+            gEx_Throw(Format("Tried to call name '{1}'. It needs at least {2} params, got {3}.", name, value.MinParams, args.MaxIndex()))
+        }
+        if (args.MaxIndex() > value.MaxParams && !value.IsVariadic) {
+            gEx_Throw(Format("Tried to call name '{1}'. It needs at most {2} params, got {3}.", name, value.MaxParams, args.MaxIndex()))
+        }
+        return value.Call(target, args*)
+    }
+
+    __Set(name, args*) {
+        target := this._target
+        if (target.__Set) {
+            return target.__Set.Call(target, keys*)
+        }
+        value := args.Pop()
+        keys := args
+        if (!this._checking || gObj_Has(target, name)) {
+            return target[name, keys*] := value
+        }
+        gEx_Throw(Format("Tried to set name '{1}', but it's not defined.", name))
+    }
+
+    __Get(name, keys*) {
+        target := this._target
+        if (target.__Get) {
+            return target.__Get.Call(target, name, keys*)
+        }
+        if (!this._checking || gObj_Has(target, name)) {
+            return target[name, keys*]
+        }
+        
+    }
+
+}
 
 ; Utility class with name verification services.
 ; Inherit from this if you want your class to only have declared members (methods, properties, and fields assigned in the initializer), so that unrecognized keys will result in an error.
@@ -224,7 +292,7 @@ gLang_IsSpecialName(name) {
 class gDeclaredMembersOnly {
 
     __Call(name, params*) {
-        if (!gLang_IsSpecialName(name) && !ObjRawGet(this, "__gutils_noVerification")) {
+        if (!gType_IsSpecialName(name) && !ObjRawGet(this, "__gutils_noVerification")) {
             gEx_Throw("Tried to call undeclared name '{1}'", name)
         } 
     }
@@ -247,13 +315,13 @@ class gDeclaredMembersOnly {
     }
 
     __Get(name) {
-        if (!gLang_IsSpecialName(name) && !ObjRawGet(this, "__gutils_noVerification")) {
+        if (!gType_IsSpecialName(name) && !ObjRawGet(this, "__gutils_noVerification")) {
             gEx_Throw(Format("Tried to get the value of undeclared name '{1}'.", name))
         }
     }
 
     __Set(name, values*) {
-        if (!gLang_IsSpecialName(name) && !ObjRawGet(this, "__gutils_noVerification")) {
+        if (!gType_IsSpecialName(name) && !ObjRawGet(this, "__gutils_noVerification")) {
             gEx_Throw(Format("Tried to set the value of undeclared name '{1}'.", name))
         }
     }
@@ -335,19 +403,6 @@ gLang_Equal(a, b, case := False) {
         return True
     }
     return False
-}
-
-z__gutils_assertType(obj, expectedType) {
-    realType := gLang_Type(obj)
-    if (expectedType != realType) {
-        gEx_Throw(Format("Input must be a '{1}'. Was {2}.", expectedType, realType))
-    }
-}
-
-z__gutils__assertNotObject(objs*) {
-    for i, obj in objs {
-        z__gutils_assertType(obj, "Primitive")
-    }
 }
 
 class gFuncList extends gDeclaredMembersOnly {

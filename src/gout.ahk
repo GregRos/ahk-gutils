@@ -73,7 +73,7 @@ gOut_Std(ansiSupport := True) {
 }
 
 gOut_File(file, ansiSupport := False) {
-    if (gLang_Is(file, "File")) {
+    if (gType_Is(file, "File")) {
         gEx_Throw("Must be a file.")
     }
     return new gOutFile(file, file, ansiSupport)

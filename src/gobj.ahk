@@ -16,23 +16,21 @@ gObj_Is(self) {
     return IsObject(self)
 }
 
-; True if `self` has any of `keys`.
-gObj_HasAnyKey(self, keys*) {
-    z__gutils_isObject("self", self, True)
-    for i, k in keys {
-        if (self.HasKey(k)) {
-            return True
-        }
-    }
-    return False
-}
-
 ; Returns an array of the object's keys.
 gObj_Keys(self, inherited := False) {
     z__gutils_isObject("self", self, True)
+    if (z__gutils_getTypeName(self)) {
+        return []
+    }
     keys := []
-    for k in self {
-        keys.Push(k)
+    while (IsObject(self)) {
+        for k in self {
+            keys.Push(k)
+        }
+        if (!inherited) {
+            return keys
+        }
+        self := ObjGetBase(self)
     }
     return keys 
 }

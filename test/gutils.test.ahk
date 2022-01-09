@@ -18,12 +18,18 @@ class Example {
     }
 }
 
-vs := []
-for k, v in (new Example()) {
-    vs.Push(k)
+blah() {
+    e := new Example()
+    prop := ObjRawGet(Example, "Property")
+    x := &(0)
+    x.Hello("a")
+    OutputDebug, % x
+
 }
 
-OutputDebug, % gArr_Join(vs)
+blah()
+ExitApp
+
 a := 1
 z__gutils_test() {
     gAssert_Eq(gLang_VarExists(bzzt), 0)
@@ -66,7 +72,6 @@ z__gutils_test() {
     gAssert_Eq(gStr_ToChars("abc"), ["a", "b", "c"])
 
     testObj := {a: 1, b: 1, c: 3}
-    gAssert_Eq(gObj_HasAnyKey(testObj, "x", "b"), True)
     gAssert_Eq(gObj_Keys(testObj), ["a", "b", "c"])
     gAssert_Eq(gObj_Pick(testObj, "a", "b"), {a: 1, b:1})
     gAssert_Eq(gObj_FromKeys(["a", "b"]), {a: 1, b: 1})
@@ -89,8 +94,8 @@ z__gutils_test() {
     gAssert_Eq(win.Class, "Chrome_WidgetWin_1")
 
     dllKey := gReg("HKCR\.dll")
-    gAssert_eq(gLang_Is(dllKey, "gRegKey"), True)
-    gAssert_eq(gLang_Is([], "gRegKey"), False)
+    gAssert_eq(gType_Is(dllKey, "gRegKey"), True)
+    gAssert_eq(gType_Is([], "gRegKey"), False)
     gAssert_Eq(dllKey.IsKey, True)
     gAssert_eq(dllKey.Get(), "dllfile")
     gAssert_Eq(dllKey.Get("Content Type"), "application/x-msdownload")
@@ -109,7 +114,7 @@ z__gutils_test() {
     gAssert_Eq(testSubkey.HasV("should_be_100"), True)
     testSubkey.EraseValue("should_be_100")
     gAssert_Eq(testSubkey.Get("should_be_100"), "")
-    
+
     testSubkey.Erase()
 
     ExitApp

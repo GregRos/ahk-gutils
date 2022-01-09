@@ -1,4 +1,5 @@
 ﻿#include glang.ahk
+#include gtype.ahk
 ; A module for working with arrays.
 
 
@@ -15,7 +16,7 @@ gArr_Repeat(self, count) {
 
 ; Returns the position of the first occurence of `what` in `self`.
 gArr_IndexOf(self, what, case := False) {
-    z__gutils_assertType(self, "Array")
+    z__gutils_assertType(self, "Object")
 
     for ix, value in self {
         if((!case && what = value) || what == value) {
@@ -27,13 +28,13 @@ gArr_IndexOf(self, what, case := False) {
 
 ; Returns true if `self` contains `what` as a substring.
 gArr_Has(self, what) {
-    z__gutils_assertType(self, "Array")
+    z__gutils_assertType(self, "Object")
     return gArr_IndexOf(self, what) > 0
 }
 
 ; Returns the find element in `self` that match `predicate`. `predicate` can be a function name or function object.
 gArr_Find(self, predicate) {
-    z__gutils_assertType(self, "Array")
+    z__gutils_assertType(self, "Object")
     predicate := gLang_Func(predicate)
     if (!predicate) {
 
@@ -43,7 +44,7 @@ gArr_Find(self, predicate) {
 
 ; Returns the positions of all the elements matching `predicate`. `predicate` can be a function name or function object.
 gArr_FindIndexes(self, predicate) {
-    z__gutils_assertType(self, "Array")
+    z__gutils_assertType(self, "Object")
     results := []
     predicate := gLang_Func(predicate)
     for index, item in self {
@@ -56,13 +57,13 @@ gArr_FindIndexes(self, predicate) {
 
 ; Find first position of the element matching `predicate`. `predicate` can be a function name or object.
 gArr_FindIndex(self, predicate) {
-    z__gutils_assertType(self, "Array")
+    z__gutils_assertType(self, "Object")
     return gArr_FindIndexes(self, predicate)[1]
 }
 
 ; Returns the array in sorted order, with the sorting options `options`.
 gArr_Order(self, options := "N") {
-    z__gutils_assertType(self, "Array")
+    z__gutils_assertType(self, "Object")
     str:= gArr_Join(self, "~")
     options .= " D~"
     Sort, str, %options%
@@ -76,7 +77,7 @@ gArr_Order(self, options := "N") {
 
 ; Returns a new array that's a concatenation of all the arrays in `arrs`.
 gArr_Concat(arrs*) {
-    z__gutils_assertType(arrs, "Array")
+    z__gutils_assertType(arrs, "Object")
     c := []
     for i, self in arrs {
         for j, item in self {
@@ -88,7 +89,7 @@ gArr_Concat(arrs*) {
 
 ; returns a new array that's the result of applying `projection` on every element. `projection` can be a funciton name or object.
 gArr_Map(self, projection) {
-    z__gutils_assertType(self, "Array")
+    z__gutils_assertType(self, "Object")
     projection := gLang_Func(projection)
     result := []
     for index, item in self {
@@ -105,7 +106,7 @@ gArr_Take(self, n) {
 
 ; Returns a new array that's made of all the elements matching `filter`. `filter` can be a function name or object.
 gArr_Filter(self, filter) {
-    z__gutils_assertType(self, "Array")
+    z__gutils_assertType(self, "Object")
     filter := gLang_Func(filter)
     result := []
     for index, item in self {
@@ -118,7 +119,7 @@ gArr_Filter(self, filter) {
 
 ; Returns the last element matching `predicate`. `predicate` can be a function name or object.
 gArr_FindLastIndex(self, predicate) {
-    z__gutils_assertType(self, "Array")
+    z__gutils_assertType(self, "Object")
     self := gArr_FindIndexes(self, predicate)
     return self[self.MaxIndex()]
 }
@@ -130,14 +131,14 @@ gArr_Is(self) {
 
 ; Gets the element at position `pos`. Supports inverse indexing.
 gArr_At(self, pos) {
-    z__gutils_assertType(self, "Array")
+    z__gutils_assertType(self, "Object")
     nIndex := z__gutils_NormalizeIndex(pos, self.MaxIndex())
     return self[nIndex]
 }
 
 ; Returns a new array that's `self` in reverse order.
 gArr_Reverse(self) {
-    z__gutils_assertType(self, "Array")
+    z__gutils_assertType(self, "Object")
     newArr := []
     Loop, % self.MaxIndex()
     {
@@ -148,7 +149,7 @@ gArr_Reverse(self) {
 
 ; Recursively flattens an array with array elements into an array of non-array elements.
 gArr_Flatten(self) {
-    z__gutils_assertType(self, "Array")
+    z__gutils_assertType(self, "Object")
     total := []
     for i, item in self {
         if (gArr_Is(item)) {
@@ -163,7 +164,7 @@ gArr_Flatten(self) {
 ; Joins an array of strings `self`, with separator `self`.
 gArr_Join(self, sep:="", omit:="") {
     z__gutils__assertNotObject(sep, omit)
-    z__gutils_assertType(self, "Array")
+    z__gutils_assertType(self, "Object")
     for ix, value in self {
         if (!gStr_Is(value)) {
             value := gStr(value)
