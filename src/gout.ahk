@@ -96,7 +96,7 @@ z__gutils_getFormattingKws() {
             , i: "italic"
             , u: "underline"
             , o: "overline"
-            , ii: "inverse",
+            , ii: "inverse"
     , h: "hidden"})
 
     colors := {black: [30, 39]
@@ -128,9 +128,9 @@ z__gutils_getFormattingKws() {
 }
 
 gOut_ParseAnsi(input) {
-    "{!black;bold;bgBlack}hello, my name is{!}"
-        static tokens := 
-    }
+    ; "{!black;bold;bgBlack}hello, my name is{!}"
+    ;     static tokens := 
+    ; }
 }
 
 ; Std - log to std, 

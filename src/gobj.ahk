@@ -28,7 +28,7 @@ gObj_HasAnyKey(self, keys*) {
 }
 
 ; Returns an array of the object's keys.
-gObj_Keys(self) {
+gObj_Keys(self, inherited := False) {
     z__gutils_isObject("self", self, True)
     keys := []
     for k in self {
@@ -143,3 +143,4 @@ gObj_Aliases(target, aliases) {
         target[k] := target[v]
     }
 }
+

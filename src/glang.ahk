@@ -33,7 +33,6 @@ gLang_InstanceOf(self, proto) {
     } until !self.base
 }
 
-
 ; Normalizes function names and objects.
 gLang_Func(funcOrName) {
     if (IsObject(funcOrName)) {
@@ -125,38 +124,46 @@ gLang_StackTrace(ignoreLast := 0) {
     }
     return frames
 }
-;https://autohotkey.com/boards/viewtopic.php?p=156419#p156419
 
-; See the classic AHK is operator, but with extra supported predicates: 
-; Func, BoundFunc, Object, Array, File, Enum, Primitive, or CLASS NAME.
+z__gutils_getTypeCode(self) {
+    ptr := NumGet(&self, "Ptr")
+    return ptr
+}
+
+z__gutils_getTypeCodes() {
+    ;https://autohotkey.com/boards/viewtopic.php?p=156419#p156419
+    func := z__gutils_getTypeCode(Func("gLang_Type"))
+    bFunc := z__gutils_getTypeCode(Func("gLang_Type").Bind())
+    file := z__gutils_getTypeCode(FileOpen("*", "r"))
+    enum := z__gutils_getTypeCode(ObjNewEnum({}))
+    RegExMatch("1", "O)1", m)
+    Match := z__gutils_getTypeCode(m)
+    return { (func): "Func", (bFunc): "BoundFunc", (file): "File", (enum): "Enumerator", (Match): "Match"}
+}
+
+; Values - "Func", "BoundFunc", "File", "Enumerator", "Match", "Array", "Object" , "Primitive"
+gLang_Type(self) {
+    static TypeCodes := z__gutils_getTypeCodes()
+    if (!IsObject(self)) {
+        return "Primitive"
+    }
+    knownType := TypeCodes[z__gutils_getTypeCode(self)]
+    if (knownType) {
+        return knownType
+    }
+    if (self.__Class) {
+        return self.__Class
+    }
+    if (self.MaxIndex() != "") {
+        return "Array"
+    }
+    return "Object"
+}
+
+; See the classic AHK is operator, but with extra supported - the return values of gLang_Type
 gLang_Is(self, type) {
-    static BoundFuncP := NumGet(&(_ := Func("gLang_Is").Bind()), "Ptr")
-    static FileP := NumGet(&(_ := FileOpen("*", "r")), "Ptr")
-    static EnumP := NumGet(&(_ := ObjNewEnum({})), "Ptr")
-    if (type = "func") {
-        return IsObject(self) && IsFunc(self)
-    }
-    if (type = "BoundFunc") {
-        return NumGet(&self, "Ptr") == BoundFuncP
-    }
-    if (type = "Object") {
-        return IsObject(self)
-    }
-    if (type = "primitive") {
-        return !IsObject(self)
-    }
-    if (type = "array") {
-        return IsObject(self) && self.MaxIndex() != ""
-    }
-    if (type = "file") {
-        ; Only system objects can hae 
-        return IsObject(self) && NumGet(&self, "Ptr") == FileP
-    }
-    if (type = "enum") {
-        return IsObject(self) && NumGet(&self, "Ptr") == EnumP
-    }
     if (IsObject(self)) {
-        return self.__Class = type
+        return gLang_Type(self) = type
     }
     if self is %type%
     {
@@ -214,6 +221,7 @@ gLang_IsSpecialName(name) {
     return builtInNames.HasKey(name) ? builtInNames[name] : 0
 }
 
+
 ; Utility class with name verification services.
 ; Inherit from this if you want your class to only have declared members (methods, properties, and fields assigned in the initializer), so that unrecognized keys will result in an error.
 ; The class implements __Get, __Call, and __Set.
@@ -221,7 +229,7 @@ class gDeclaredMembersOnly {
 
     __Call(name, params*) {
         if (!gLang_IsSpecialName(name) && !ObjRawGet(this, "__gutils_noVerification")) {
-            gEx_Throw("Tried to call undeclared method '" name "'.")
+            gEx_Throw("Tried to call undeclared name '{1}'", name)
         } 
     }
 
@@ -244,22 +252,14 @@ class gDeclaredMembersOnly {
 
     __Get(name) {
         if (!gLang_IsSpecialName(name) && !ObjRawGet(this, "__gutils_noVerification")) {
-            gEx_Throw("Tried to get the value of undeclared member '" name "'.")
+            gEx_Throw(Format("Tried to get the value of undeclared name '{1}'.", name)
         }
     }
 
     __Set(name, values*) {
         if (!gLang_IsSpecialName(name) && !ObjRawGet(this, "__gutils_noVerification")) {
-            gEx_Throw("Tried to set the value of undeclared member '" name "'.")
+            gEx_Throw(Format("Tried to set the value of undeclared name '{1}'.", name))
         }
-    }
-
-    __DisableVerification() {
-        ObjRawSet(this, "__gutils_noVerification", true)
-    }
-
-    __EnableVerification() {
-        this.Delete("__gutils_noVerification")
     }
 
     __IsVerifying {
@@ -313,7 +313,7 @@ gEx_ThrowObj(ex, ignoreLastInTrace := 0) {
     Throw ex
 }
 
-; Recursively determines if a is structurally equal to b.
+; Recursively determines if a is structurally equal to b and has the same
 gLang_Equal(a, b, case := False) {
     if (!case && a = b) {
         return True
@@ -328,14 +328,25 @@ gLang_Equal(a, b, case := False) {
         if (a.Count() != b.Count()) {
             return False
         }
+        if (ObjGetBase(a) != ObjGetBase(b)) {
+            return False
+        }
         for k, v in a {
             if (!gLang_Equal(v, b[k], case)) {
                 return False
             }
         }
+        return ObjGetBase(a, )
         return True
     }
     return False
+}
+
+z__gutils_assertType(obj, expectedType) {
+    realType := gLang_Type(obj)
+    if (expectedType != realType) {
+        gEx_Throw(Format("Input must be a '{1}'. Was {2}.", expectedType, realType))
+    }
 }
 
 z__gutils_assertArray(obj) {
