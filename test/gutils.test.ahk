@@ -21,9 +21,8 @@ class Example {
 blah() {
     e := new Example()
     prop := ObjRawGet(Example, "Property")
-    x := &(0)
-    x.Hello("a")
-    OutputDebug, % x
+    nonExistent := *z__gutils_doesntExistCode
+    OutputDebug, % nonExistent
 
 }
 

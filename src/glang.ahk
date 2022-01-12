@@ -133,7 +133,7 @@ z__gutils_NormalizeIndex(negIndex, length) {
     return negIndex
 }
 
-z_gutils_ToBool(value) {
+z__gutils_ToBool(value) {
     if (!value || value = "off" || value = "False" || ) {
         return False
     }
@@ -143,12 +143,15 @@ z_gutils_ToBool(value) {
     return !!value
 }
 
-z__gutils_Get()
-
-; Gets a value from an object, possibly deep. If the value doesn't exist, it will return gUtils_None.
-gObj_Get(what, key, deep := False) {
+; Gets a value from an object, possibly deep. If the value is found, the byref out will be modified.
+gObj_RawGet(what, key, deep := False, byref found := "") {
+    if (z__gutils_getTypeName(what)) {
+        found := False
+        return ""
+    }
     while (IsObject(what)) {
         if (ObjHasKey(what, key)) {
+            found := True
             return ObjRawGet(what, key)
         }
         if (!deep) {
@@ -158,24 +161,16 @@ gObj_Get(what, key, deep := False) {
     }
 }
 
-
-
-gObj_Has(what, key) {
-    if (z__gutils_getTypeName(what)) {
-        return False
-    }
-    while (IsObject(what)) {
-        if (ObjHasKey(what, key)) {
-            return True
-        }
-        what := ObjGetBase(what)
-    }
-    return False
+gObj_Has(what, key, deep := False) {
+    found := False
+    gObj_RawGet(what, key, deep, found)
+    return found
 }
+
 
 ; Parses a value as a boolean. `type` determines how to return it. Three modes - OnOff, TrueFalse, TrueFalseString.
 gLang_Bool(bool, type := "TrueFalse") {
-    trueBool := z_gutils_ToBool(bool)
+    trueBool := z__gutils_ToBool(bool)
     if (type = "TrueFalse" || !type) {
         return trueBool
     }
@@ -206,6 +201,8 @@ gType_IsSpecialName(name) {
     return builtInNames.HasKey(name) ? builtInNames[name] : 0
 }
 
+z__gutils_check
+
 class gMemberCheckingProxy {
     _target := ""
     _checking := True
@@ -216,6 +213,7 @@ class gMemberCheckingProxy {
         }
         this._target := target
     }
+
 
     __Call(name, args*) {
         target := this._target
@@ -267,10 +265,25 @@ class gMemberCheckingProxy {
         }
         value := args.Pop()
         keys := args
+        property := gObj_RawGet(target, name, True, found)
+        if (!found) {
+            gEx_Throw(Format("Tried to set name '{1}', but it's not defined.", name))
+        }
+        if (gType_Is(property, "Property")) {
+            if (!property.set) {
+                gEx_Throw(Format("Tried to set name '{1}', but it was a property with no setter."))
+            }
+            func := property.set
+            if ()
+        }
         if (!this._checking || gObj_Has(target, name)) {
+            found := False
+            if (!found) {
+
+            }
             return target[name, keys*] := value
         }
-        gEx_Throw(Format("Tried to set name '{1}', but it's not defined.", name))
+
     }
 
     __Get(name, keys*) {
@@ -281,7 +294,7 @@ class gMemberCheckingProxy {
         if (!this._checking || gObj_Has(target, name)) {
             return target[name, keys*]
         }
-        
+
     }
 
 }

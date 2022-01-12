@@ -44,6 +44,7 @@ z__gutils_getTypeName(self) {
 }
 
 global z__gutils_typeCodes := z__gutils_getTypeCodes()
+global z__gutils_doesntExistCode := &z__gutils_nonExistent
 
 ; Values - "Func", "BoundFunc", "File", "Enumerator", "Match", "Class", "Property", "Object" , "Primitive", or __Class
 gType(self) {
