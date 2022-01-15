@@ -268,6 +268,16 @@ gStr_At(ByRef self, pos) {
     return SubStr(self, pos, 1)
 }
 
+class gMatch {
+    _target := ""
+    __New(mObject) {
+        if (!gType_Is(mObject, "Match")) {
+            gEx_Throw("Expected match object.")
+        }
+        this._target := mObject
+    }
+}
+
 class gRegEx {
     search := ""
     options := ""
@@ -277,6 +287,10 @@ class gRegEx {
         if (!gStr_IndexOf(options, "O")) {
             this.options := "O"
         }
+    }
+
+    New(search, options := "") {
+        return gLang_SmartProxy(new gRegEx(search, options))
     }
 
     Value {
@@ -308,7 +322,14 @@ class gRegEx {
     }
 
     Split(byref haystack, limit := -1, pos := 1) {
-        
+        limit := limit = -1 ? 10000000 : limit
+        array := []
+        for i, match in this.All(haystack, pos) {
+            if (limit > -1 && i > limit) {
+                break
+            }
+            
+        }
     }
 
     Replace(ByRef haystack, replacement, limit := -1, pos := 1) {
@@ -317,7 +338,10 @@ class gRegEx {
         }
         
     }
-    
+}
+
+gStr_Regex(search, options := "") {
+    return gRegEx.New(search, options)
 }
 
 ; Returns a match object.

@@ -116,3 +116,146 @@ z__gutils__assertNotObject(objs*) {
         z__gutils_assertType(obj, "Primitive")
     }
 }
+
+z__gutils_ToBool(value) {
+    if (!value || value = "off" || value = "False" || ) {
+        return False
+    }
+    if (value = True || value = "on") {
+        return True
+    }
+    return !!value
+}
+
+; Parses a value as a boolean. `type` determines how to return it. Three modes - OnOff, TrueFalse, TrueFalseString.
+gLang_Bool(bool, type := "TrueFalse") {
+    trueBool := z__gutils_ToBool(bool)
+    if (type = "TrueFalse" || !type) {
+        return trueBool
+    }
+    if (type = "OnOff") {
+        return trueBool ? "On" : "Off"
+    }
+    if (type = "TrueFalseString") {
+        return trueBool ? "False" : "True"
+    }
+    gEx_Throw("Unknown normalization type " type)
+}
+
+; 0 - not a built-in name. 1 - built-in object name. 2 - meta function or other special member.
+gType_IsSpecialName(name) {
+    static builtInNames := {__Call: 2, base : 2
+        , __get: 2, __set: 2
+        ,__new: 2, __gutils_noVerification: 2
+        , __init: 2, __class: 2
+        ,_NewEnum: 1, HasKey: 1
+        ,Clone: 1, GetAddress: 1
+        ,SetCapacity: 1, GetCapacity: 1
+        ,MinIndex: 1, MaxIndex: 1
+        ,Length: 1, Delete: 1
+        ,Push: 1, Pop: 1
+        ,InsertAt: 1,RemoveAt: 1
+    ,Insert: 1, Remove: 1}
+
+    return builtInNames.HasKey(name) ? builtInNames[name] : 0
+}
+
+class gMemberCheckingProxy {
+    _target := ""
+    _checking := False
+    _modes := ""
+
+    ; Modes - f[rozen], 
+    __New(target, modes := "") {
+        if (!target) {
+            gEx_Throw(Format("Error - target is empty: '{1}'.", target))
+        }
+        tn := z__gutils_getTypeName(target)
+        if (tn != "") {
+            gEx_Throw(Format("Can't create a proxy for '{1}', it's a built-in object.", tn))
+        }
+        this._target := target
+        this._modes := modes
+        this._checking := True
+        
+    }
+
+    _targetGet(name, byref found) {
+        target := ObjRawGet(this, "_target")
+        return gObj_RawGet(target, name, True, found)
+    }
+
+    __Call(name, args*) {
+        target := ObjRawGet(this, "_target")
+        checking := ObjRawGet(this, "_checking")
+        if (!checking || gType_IsSpecialName(name)) {
+            return target[name].Call(target, args*)
+        }
+        if (target.__Call) {
+            return target.__Call.Call(target, name, args*)
+        }
+        if (gType_IsSpecialName(name)) {
+            ; Can't do checking for special names without hardcoding them
+            return target[name].Call(target, args*)
+        }
+        value := this._targetGet(name, found)
+        if (!found) {
+            gEX_Throw(Format("Tried to call name '{1}', but it doesn't exist.", name))
+        }
+        z__gutils_callableWith(value, args*)
+        return value.Call(target, args*)
+    }
+
+    __Set(name, args*) {
+        value := args.Pop()
+        keys := args
+        target := ObjRawGet(this, "_target")
+        if (!target) {
+            return ObjRawSet(this, name, value)
+        }
+        if (target.__Set) {
+            args.Push(value)
+            return target.__Set.Call(target, name, args*)
+        }
+        checking := ObjRawGet(this, "_checking")
+        if (!checking || gType_IsSpecialName(name)) {
+            return target[name, keys*] := value
+        }
+        property := this._targetGet(name, found)
+        if (!found) {
+            gEx_Throw(Format("Tried to set name '{1}', but it wasn't defined.", name))
+        }
+        if (gType_Is(property, "Property") && !property.set) {
+            gEx_Throw(Format("Tried to set name '{1}', but it was a property with no setter."))
+        }
+        ; It's defined and settable
+        target[name, keys*] := value
+        return value
+    }
+
+    __Get(name, keys*) {
+        target := ObjRawGet(this, "_target")
+        if (!target) {
+            return ObjRawGet(this, name)
+        }
+        checking := ObjRawGet(this, "_checking")
+        if (target.__Get) {
+            return target.__Get.Call(target, name, keys*)
+        }
+        if (!checking || gType_IsSpecialName(name)) {
+            return target[name, keys*]
+        }
+        prop := gObj_RawGet(name, found)
+        if (!found) {
+            gEx_Throw(Format("Tried to get name '{1}', but it wasn't defined."))
+        }
+        if (gType_Is(prop, "Property") && !prop.get) {
+            gEx_Throw(Format("Tried to get name '{1}', but it was a property with no setter."))
+        }
+        return target[name, keys*]
+    }
+}
+
+gLang_SmartProxy(target) {
+    return new gMemberCheckingProxy(target)
+}
