@@ -32,7 +32,7 @@ class gVtableInvoker {
 
 ; Returns an invoker for COM vtable calls.
 gSys_ComVTableInvoker(ref, dependencies := "") {
-    return gLang_CreateMemberCheckingProxy(new gVtableInvoker(ref, dependencies))
+    return gLang_SmartProxy(new gVtableInvoker(ref, dependencies))
 }
 
 ; Get the current PID.

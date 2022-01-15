@@ -78,7 +78,7 @@ class gRegKey {
     subKey := ""
 
     New(parts*) {
-        return gLang_CreateMemberCheckingProxy(new gRegKey(parts*))
+        return gLang_SmartProxy(new gRegKey(parts*))
     }
     ; Create a new gRegKey. parts - one or more path parts of the key. Path must be rooted.
     __New(parts*) {

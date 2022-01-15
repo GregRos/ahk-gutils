@@ -60,7 +60,7 @@ class gStackFrame {
         frame.Line := line
         frame.Function := function
         frame.Offset := offset
-        return gLang_CreateMemberCheckingProxy(frame)
+        return gLang_SmartProxy(frame)
     }
 }
 z__gutils_printStack(frames) {
@@ -295,7 +295,7 @@ class gMemberCheckingProxy {
     }
 }
 
-gLang_CreateMemberCheckingProxy(target) {
+gLang_SmartProxy(target) {
     return new gMemberCheckingProxy(target)
 }
 
