@@ -181,10 +181,10 @@ class gMemberCheckingProxy {
         this.__gproxy_checking := True
     }
 
-    __gproxy_target_get(name, byref found) {
+    __gproxy_target_get(name) {
         target := ObjRawGet(this, "__gproxy_target")
         z := gObj_RawGet(target, name, True, found)
-        return z
+        return found ? {value: z} : ""
     }
 
     __Call(name, args*) {
@@ -202,11 +202,11 @@ class gMemberCheckingProxy {
                 ; Can't do checking for special names without hardcoding them
                 return target[name].Call(target, args*)
             }
-            found := 0
-            value := this.__gproxy_target_get(name, found)
-            if (!found && !value) {
+            value := this.__gproxy_target_get(name)
+            if (!value) {
                 gEX_Throw(Format("Tried to call name '{1}', but it doesn't exist.", name))
             }
+            value := ObjRawGet(value, "value")
             return gFunc_Checked(value).Call(target, args*)
         }
     }
@@ -227,11 +227,11 @@ class gMemberCheckingProxy {
             if (!checking || gType_IsSpecialName(name)) {
                 return target[name, keys*] := value
             }
-            found := False
-            property := this.__gproxy_target_get(name, found)
-            if (!found) {
+            result := this.__gproxy_target_get(name)
+            if (!result) {
                 gEx_Throw(Format("Tried to set name '{1}', but it wasn't defined.", name))
             }
+            property := ObjRawGet(result, "value")
             if (gType_Is(property, "Property") && !property.set) {
                 gEx_Throw(Format("Tried to set name '{1}', but it was a property with no setter.", name))
             }
@@ -254,11 +254,11 @@ class gMemberCheckingProxy {
             if (!checking || gType_IsSpecialName(name)) {
                 return target[name, keys*]
             }
-            found := False
-            prop := this.__gproxy_target_get(name, found)
-            if (!found) {
+            prop := this.__gproxy_target_get(name)
+            if (!prop) {
                 gEx_Throw(Format("Tried to get name '{1}', but it wasn't defined.", name))
             }
+            prop := ObjRawGet(prop, "value")
             if (gType_Is(prop, "Property") && !prop.get) {
                 gEx_Throw(Format("Tried to get name '{1}', but it was a property with no setter.", name))
             }

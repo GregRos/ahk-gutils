@@ -1,20 +1,26 @@
 
 ; Represents an entry in a stack trace.
-class gStackFrame {
+class gStackFrame extends gMemberCheckingProxy {
+    class Inner {
+        ToString() {
+            x := Format("{1}:{2} {4}+{3} ", e.File, e.Line, e.Function, e.Offset)
+            return x
+        }
 
-    ToString() {
-        x := Format("{1}:{2} {4}+{3} ", e.File, e.Line, e.Function, e.Offset)
-        return x
+        __New(file, line, function, offset) {
+            frame := this
+            frame.File := file
+            frame.Line := line
+            frame.Function := function
+            frame.Offset := offset
+            return frame
+        }
     }
 
-    New(file, line, function, offset) {
-        frame := new gStackFrame()
-        frame.File := file
-        frame.Line := line
-        frame.Function := function
-        frame.Offset := offset
-        return frame
+    __New(file, line, function, offset) {
+        base.__New(new this.inner(file, line, function, offset))
     }
+
 }
 
 z__gutils_printStack(frames) {
@@ -43,7 +49,7 @@ gLang_StackTrace(ignoreLast := 0) {
         if (e.What == offset && offset != 0) {
             break
         }
-        frames.Push(gStackFrame.New(e.File, e.Line, e.What, offset))
+        frames.Push(new gStackFrame(e.File, e.Line, e.What, offset))
     }
     ; In this state, the File:Line refer to the place where execution entered What.
     ; That's actually not very useful. I want it to have What's location instead. So we nbeed

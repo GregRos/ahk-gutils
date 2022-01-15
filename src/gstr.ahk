@@ -278,70 +278,74 @@ class gMatch {
     }
 }
 
-class gRegEx {
-    search := ""
-    options := ""
+class gRegEx extends gMemberCheckingProxy {
+
+    class Inner {
+        search := ""
+        options := ""
+        __New(search, options := "") {
+            this.search := search
+            this.options := options
+            if (!gStr_IndexOf(options, "O")) {
+                this.options := "O"
+            }
+        }
+
+        Value {
+            get {
+                return gArr_Join(this.options, this.search, ")")
+            }
+        }
+
+        First(ByRef haystack, pos := 1) {
+            z__gutils__assertNotObject(haystack, pos)
+            needle := options "O)" needle
+            RegExMatch(self, needle, match, pos)
+            return match
+        }
+
+        All(ByRef haystack, pos := 1) {
+            z__gutils__assertNotObject(haystack, pos)
+            array:=[]
+
+            while (1) {
+                pos := RegExMatch(self, this.Value, match, pos)
+                if (!pos) {
+                    break
+                }
+                array.Push(match)
+                pos := match.Len(0)
+            }
+            Return array
+        }
+
+        Split(byref haystack, limit := -1, pos := 1) {
+            limit := limit = -1 ? 10000000 : limit
+            array := []
+            for i, match in this.All(haystack, pos) {
+                if (limit > -1 && i > limit) {
+                    break
+                }
+
+            }
+        }
+
+        Replace(ByRef haystack, replacement, limit := -1, pos := 1) {
+            if (gType_Is(haystack, "primitive")) {
+                return RegExReplace(haystack, this.Value,, limit, pos)
+            }
+
+        }
+    }
+
     __New(search, options := "") {
-        this.search := search
-        this.options := options
-        if (!gStr_IndexOf(options, "O")) {
-            this.options := "O"
-        }
+        base.__New(new this.inner(search, options))
     }
 
-    New(search, options := "") {
-        return gObj_Checked(new gRegEx(search, options))
-    }
-
-    Value {
-        get {
-            return gArr_Join(this.options, this.search, ")")
-        }
-    }
-
-    First(ByRef haystack, pos := 1) {
-        z__gutils__assertNotObject(haystack, pos)
-        needle := options "O)" needle
-        RegExMatch(self, needle, match, pos)
-        return match
-    }
-
-    All(ByRef haystack, pos := 1) {
-        z__gutils__assertNotObject(haystack, pos)
-        array:=[]
-
-        while (1) {
-            pos := RegExMatch(self, this.Value, match, pos)
-            if (!pos) {
-                break
-            }
-            array.Push(match)
-            pos := match.Len(0)
-        }
-        Return array
-    }
-
-    Split(byref haystack, limit := -1, pos := 1) {
-        limit := limit = -1 ? 10000000 : limit
-        array := []
-        for i, match in this.All(haystack, pos) {
-            if (limit > -1 && i > limit) {
-                break
-            }
-            
-        }
-    }
-
-    Replace(ByRef haystack, replacement, limit := -1, pos := 1) {
-        if (gType_Is(haystack, "primitive")) {
-            return RegExReplace(haystack, this.Value,, limit, pos)
-        }
-        
-    }
 }
 
 gStr_Regex(search, options := "") {
-    return gRegEx.New(search, options)
+    return new gRegEx(search, options)
 }
 
 ; Returns a match object.
@@ -362,5 +366,4 @@ gStr_Matches(ByRef self, needle, options := "", pos := 1) {
     }
     Return array
 }
-
 

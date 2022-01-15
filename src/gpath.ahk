@@ -1,27 +1,28 @@
 
 ; A path that's been parsed into its components.
-class gParsedPath  {
-    root := ""
-    path := ""
-    filename := ""
-    dir := ""
-    fileNoExt := ""
-    ext := ""
-    drive := ""
-    __New(path) {
-        SplitPath, % path, file, dir, ext, fileNoExt, drive
-        this.filename := file
-        this.dir := dir
-        this.ext := ext
-        this.fileNoExt := fileNoExt
-        this.drive := drive
+class gParsedPath extends gMemberCheckingProxy {
+    class Inner {
+        root := ""
+        path := ""
+        filename := ""
+        dir := ""
+        fileNoExt := ""
+        ext := ""
+        drive := ""
+        __New(path) {
+            SplitPath, % path, file, dir, ext, fileNoExt, drive
+            this.filename := file
+            this.dir := dir
+            this.ext := ext
+            this.fileNoExt := fileNoExt
+            this.drive := drive
+        }
     }
 
-    New(path) {
-        return gObj_Checked(new gParsedPath(path))
+    __New(path) {
+        base.__New(new this.inner(path))
     }
 }
-
 
 ; Joins parts of a path with the right separator '\'.
 gPath_Join(parts*) {
@@ -31,7 +32,7 @@ gPath_Join(parts*) {
 ; Parses a rooted or non-rooted path `path`.
 gPath_Parse(path) {
     z__gutils__assertNotObject(path)
-    return gParsedPath.New(path)
+    return new gParsedPath(path)
 }
 
 ; Resolves relative parts `parts`. Each segment is resolved based on the segment before it, until reaching the CWD. 
@@ -50,6 +51,6 @@ gPath_Relative(from, to) {
     z__gutils__assertNotObject(from, to)
     FILE_ATTRIBUTE_DIRECTORY := 0x10
     VarSetCapacity(outBuf, 300 * (A_IsUnicode ? 2 : 1))
-    success := DllCall("Shlwapi.dll\PathRelativePathTo", "str", outBuf,  "str", from, "uint", FILE_ATTRIBUTE_DIRECTORY, "str", to, "uint", FILE_ATTRIBUTE_DIRECTORY, "uint")
+    success := DllCall("Shlwapi.dll\PathRelativePathTo", "str", outBuf, "str", from, "uint", FILE_ATTRIBUTE_DIRECTORY, "str", to, "uint", FILE_ATTRIBUTE_DIRECTORY, "uint")
     return outBuf
 }
