@@ -110,7 +110,7 @@ gLang_StackTrace(ignoreLast := 0) {
 
 z__gutils_NormalizeIndex(negIndex, length) {
     if (negIndex <= 0) {
-        return length + negIndex + 1
+        return length + negIndex
     }
     return negIndex
 }
