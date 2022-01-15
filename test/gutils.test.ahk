@@ -2,7 +2,7 @@
 SendMode Input
 SetWorkingDir, %A_ScriptDir%
 #NoEnv
-
+#Requires AutoHotkey v1.1.33+
 #include ../src/
 #include gutils.ahk
 gUtils(True)

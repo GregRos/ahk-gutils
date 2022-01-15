@@ -8,16 +8,16 @@ z__gutils_assertOut(line) {
     e := Chr("0x001b")
     line := gStr_Replace(line, "\e", e)
 
-    FileAppend, % "`r`n" line , *, UTF-8
+    FileAppend, % "`r`n" line, *, UTF-8
 }
 z__gutils_reportAssertionResults(z := "") {
     fail := z__gutils_assertResults.fail
     pass := z__gutils_assertResults.pass
     line := gStr_Repeat("═", 50)
-    len1 := gStr_Repeat(" ", 7)
+    len1 := gStr_Repeat(" ", 0)
     len2 := gStr_Repeat(" ", 13)
     finishLine := gStr_Repeat(" ", 18) "🏁 FINISHED 🏁"
-    summaryLine := Format(len1 "\e[31;1m Failed ❌: {1} Passed ✅: {2} Total ❓: {3}", fail, pass, fail + pass)
+    summaryLine := Format(len1 "\e[31;1m {3} Assertions:    ❌ {1} Failed    ✅ Passed {2}", fail, pass, fail + pass)
         warningLine := fail > 0 ? "SOME ASSERTIONS FAILED" : ""
         lines := [line
         , finishLine

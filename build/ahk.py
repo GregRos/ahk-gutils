@@ -42,7 +42,8 @@ def _try_fallbacks(*fs: Callable[[], str]):
 def _try_ahk_location():
     global _ahk_location
     if not _ahk_location:
-        _ahk_location = _try_fallbacks(_try_install_dir, _try_default_icon, _try_ahk_location)
+        _ahk_location = _try_fallbacks(
+            _try_install_dir, _try_default_icon, _try_ahk_location)
     return _ahk_location
 
 
@@ -50,7 +51,15 @@ def run(file: str, ahk_location=None):
     ahk_location = ahk_location or _try_ahk_location()
     dir, name = path.split(file)
     os.chdir(dir)
-    p = subprocess.run([ahk_location,  '/ErrorStdOut', name], shell=True, timeout=10, text=True, check=True, encoding="utf-8")
+    p = subprocess.run(
+        [ahk_location,  '/ErrorStdOut', name],
+        shell=True,
+        timeout=10,
+        text=True,
+        check=True,
+        encoding="utf-8", 
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
+    print(p.stdout)
 
-    stdout, stderr = p.stdout, p.stderr
     x = 5
