@@ -18,18 +18,6 @@ class Example {
     }
 }
 
-blah() {
-    e := new Example()
-    prop := ObjRawGet(Example, "Property")
-    nonExistent := *z__gutils_doesntExistCode
-    OutputDebug, % nonExistent
-
-}
-
-blah()
-ExitApp
-
-a := 1
 z__gutils_test() {
     gAssert_Eq(gLang_VarExists(bzzt), 0)
     gAssert_Eq(IsObject(gLang_Func("gAssert_Gtr")), True)

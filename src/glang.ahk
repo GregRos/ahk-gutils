@@ -1,19 +1,3 @@
-class z__gutils_None {
-    __Get(name, args*) {
-        gEx_Throw(Format("Cannot get '{1}' from a None value.", name))
-    }
-
-    __Call(name, args*) {
-        gEx_Throw(Format("Cannot call '{1}' on a None value.", name))
-    }
-
-    __Set(name, args*) {
-        gEx_Throw(Format("Cannot set '{1}' on a None value.", name))
-    }
-}
-
-z__gutils_None := new z__gutils_None()
-
 ; Returns a slice of elements from `self` that is `start` to `end`.
 gArr_Slice(self, start := 1, end := 0) {
     result:=[]
@@ -155,7 +139,7 @@ gObj_RawGet(what, key, deep := False, byref found := "") {
             return ObjRawGet(what, key)
         }
         if (!deep) {
-            return gUtils_None
+            return ""
         }
         what := ObjGetBase(what)
     }
@@ -166,7 +150,6 @@ gObj_Has(what, key, deep := False) {
     gObj_RawGet(what, key, deep, found)
     return found
 }
-
 
 ; Parses a value as a boolean. `type` determines how to return it. Three modes - OnOff, TrueFalse, TrueFalseString.
 gLang_Bool(bool, type := "TrueFalse") {
@@ -181,6 +164,33 @@ gLang_Bool(bool, type := "TrueFalse") {
         return trueBool ? "False" : "True"
     }
     gEx_Throw("Unknown normalization type " type)
+}
+
+z__gutils_callableWith(what, args*) {
+    typeName := z__gutils_getTypeName(value)
+    if (typeName = "Primitive") {
+        gEx_Throw(Format("Tried to call name '{1}', but it was a primitive."))
+    }
+    if (typeName = "BoundFunc") {
+        ; Can't do any checking with BoundFuncs
+        return True
+    }
+    if (typeName != "Func") {
+        ; Custom objects will also behave in weird ways...
+        if (gObj_Has(value, "Call")) {
+            return True
+        }
+        ; But this one doesn't have 'Call'
+        gEx_Throw(Format("Tried to call name '{1}', but it was an uncallable object."))
+    }
+    ; This is a Func then we can do some checks
+    if (args.MaxIndex() < value.MinParams) {
+        gEx_Throw(Format("Tried to call name '{1}'. It needs at least {2} params, got {3}.", name, value.MinParams, args.MaxIndex()))
+    }
+    if (args.MaxIndex() > value.MaxParams && !value.IsVariadic) {
+        gEx_Throw(Format("Tried to call name '{1}'. It needs at most {2} params, got {3}.", name, value.MaxParams, args.MaxIndex()))
+    }
+    return True
 }
 
 ; 0 - not a built-in name. 1 - built-in object name. 2 - meta function or other special member.
@@ -201,8 +211,6 @@ gType_IsSpecialName(name) {
     return builtInNames.HasKey(name) ? builtInNames[name] : 0
 }
 
-z__gutils_check
-
 class gMemberCheckingProxy {
     _target := ""
     _checking := True
@@ -214,10 +222,9 @@ class gMemberCheckingProxy {
         this._target := target
     }
 
-
     __Call(name, args*) {
         target := this._target
-        if (!this._checking) {
+        if (!this._checking || gType_IsSpecialName(name)) {
             return target[name].Call(target, args*)
         }
         if (target.__Call) {
@@ -227,63 +234,34 @@ class gMemberCheckingProxy {
             ; Can't do checking for special names without hardcoding them
             return target[name].Call(target, args*)
         }
-        if (!gObj_Has(target, name)) {
+        value := gObj_RawGet(target, name, True, found)
+        if (!found) {
             gEX_Throw(Format("Tried to call name '{1}', but it doesn't exist.", name))
         }
-        value := target[name]
-        typeName := z__gutils_getTypeName(value)
-        if (typeName = "Primitive") {
-            gEx_Throw(Format("Tried to call name '{1}', but it was a primitive."))
-        }
-        if (typeName = "BoundFunc") {
-            ; Can't do any checking with BoundFuncs
-            return value.Call(target, args*)
-        }
-
-        if (typeName != "Func") {
-            ; Custom objects will also behave in weird ways...
-            if (gObj_Has(value, "Call")) {
-                return value.Call(target, args*)
-            }
-            ; But this one doesn't have 'Call'
-            gEx_Throw(Format("Tried to call name '{1}', but it was an uncallable object."))
-        }
-        ; This is a Func then we can do some checks
-        if (args.MaxIndex() < value.MinParams) {
-            gEx_Throw(Format("Tried to call name '{1}'. It needs at least {2} params, got {3}.", name, value.MinParams, args.MaxIndex()))
-        }
-        if (args.MaxIndex() > value.MaxParams && !value.IsVariadic) {
-            gEx_Throw(Format("Tried to call name '{1}'. It needs at most {2} params, got {3}.", name, value.MaxParams, args.MaxIndex()))
-        }
+        z__gutils_callableWith(value, args*)
         return value.Call(target, args*)
     }
 
     __Set(name, args*) {
         target := this._target
         if (target.__Set) {
-            return target.__Set.Call(target, keys*)
+            return target.__Set.Call(target, name, args*)
         }
         value := args.Pop()
         keys := args
-        property := gObj_RawGet(target, name, True, found)
-        if (!found) {
-            gEx_Throw(Format("Tried to set name '{1}', but it's not defined.", name))
-        }
-        if (gType_Is(property, "Property")) {
-            if (!property.set) {
-                gEx_Throw(Format("Tried to set name '{1}', but it was a property with no setter."))
-            }
-            func := property.set
-            if ()
-        }
-        if (!this._checking || gObj_Has(target, name)) {
-            found := False
-            if (!found) {
-
-            }
+        if (!this._checking || gType_IsSpecialName(name)) {
             return target[name, keys*] := value
         }
-
+        property := gObj_RawGet(target, name, True, found)
+        if (!found) {
+            gEx_Throw(Format("Tried to set name '{1}', but it wasn't defined.", name))
+        }
+        if (gType_Is(property, "Property") && !property.set) {
+            gEx_Throw(Format("Tried to set name '{1}', but it was a property with no setter."))
+        }
+        ; It's defined and settable
+        target[name, keys*] := value
+        return value
     }
 
     __Get(name, keys*) {
@@ -291,11 +269,28 @@ class gMemberCheckingProxy {
         if (target.__Get) {
             return target.__Get.Call(target, name, keys*)
         }
-        if (!this._checking || gObj_Has(target, name)) {
+        if (!this._checking || gLang_IsSpecialName(name)) {
             return target[name, keys*]
         }
-
+        prop := gObj_RawGet(target, name, True, found)
+        if (!found) {
+            gEx_Throw(Format("Tried to get name '{1}', but it wasn't defined."))
+        }
+        if (gType_Is(prop, "Property") && !prop.get) {
+            gEx_Throw(Format("Tried to get name '{1}', but it was a property with no setter."))
+        }
+        return target[name, keys*]
     }
+
+    HasKey(k) {
+        return this._target.HasKey(k)
+    }
+
+    _NewEnum() {
+        return this._target._NewEnum()
+    }
+
+    
 
 }
 

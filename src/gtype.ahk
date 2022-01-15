@@ -24,8 +24,7 @@ z__gutils_getTypeCodes() {
     bFunc := z__gutils_getTypeCode(Func("z__gutils_getTypeCodes").Bind())
     file := z__gutils_getTypeCode(FileOpen("*", "r"))
     enum := z__gutils_getTypeCode(ObjNewEnum({}))
-    cls := z__gutils_getTypeCode(z__gutils_example)
-    prop := z__gutils_getTypeCode(ObjRawGet(z__gutils_example, "get"))
+    prop := z__gutils_getTypeCode(ObjRawGet(z__gutils_example, "Prop"))
     RegExMatch("1", "O)1", m)
     Match := z__gutils_getTypeCode(m)
     ; String ints are handled differently from ints
