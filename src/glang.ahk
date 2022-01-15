@@ -281,17 +281,6 @@ class gMemberCheckingProxy {
         }
         return target[name, keys*]
     }
-
-    HasKey(k) {
-        return this._target.HasKey(k)
-    }
-
-    _NewEnum() {
-        return this._target._NewEnum()
-    }
-
-    
-
 }
 
 ; Utility class with name verification services.
