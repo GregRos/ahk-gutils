@@ -73,9 +73,13 @@ z__gutils_checkKeyExists(rootedKey) {
 }
 
 ; A registry key.
-class gRegKey extends gDeclaredMembersOnly {
+class gRegKey {
     root := ""
     subKey := ""
+
+    New(parts*) {
+        return gLang_CreateMemberCheckingProxy(new gRegKey(parts*))
+    }
     ; Create a new gRegKey. parts - one or more path parts of the key. Path must be rooted.
     __New(parts*) {
         root := parts[1]
@@ -118,7 +122,7 @@ class gRegKey extends gDeclaredMembersOnly {
             return ""
         }
         parts := z__gutils_splitRegPath(resolved)
-        child := new gRegKey(parts*)
+        child := gRegKey.New(parts*)
         return child
     }
 
@@ -130,7 +134,7 @@ class gRegKey extends gDeclaredMembersOnly {
             }
             parent := z__gutils_resolveRegPath(this.Key, "..")
             parsed := z__gutils_splitRegPath(parent)
-            return new gRegKey(parsed[1], parsed[2])
+            return gRegKey.New(parsed[1], parsed[2])
         }
     }
 
@@ -139,7 +143,7 @@ class gRegKey extends gDeclaredMembersOnly {
         arr := []
         Loop, Reg, % this.key, K
         {
-            arr.Push(new gRegKey(A_LoopRegKey, A_LoopRegSubkey, A_LoopRegName))
+            arr.Push(gRegKey.New(A_LoopRegKey, A_LoopRegSubkey, A_LoopRegName))
         }
         return arr
     }
@@ -152,8 +156,7 @@ class gRegKey extends gDeclaredMembersOnly {
             RegRead, X
             values[A_LoopRegName] := X
         }
-        ObjSetBase(values, gDeclaredMembersOnly)
-        return values
+        return gRegKey.New(values)
     }
 
     ; Removes a value from this key. Cannot remove the default value.
@@ -195,7 +198,7 @@ class gRegKey extends gDeclaredMembersOnly {
             gEx_ThrowObj(err)
         }
         parsed := z__gutils_splitRegPath(fullKey)
-        return new gRegKey(parsed[1], parsed[2])
+        return gRegKey.New(parsed[1], parsed[2])
     }
 
     ; True if this key has a child key with the path from `parts`.
@@ -245,5 +248,5 @@ gReg(parts*) {
         gEx_Throw(Format("Key '{1}' doesn't exist.", key))
     }
     parsed := z__gutils_splitRegPath(key)
-    return new gRegKey(parsed[1], parsed[2])
+    return gRegKey.New(parsed[1], parsed[2])
 }

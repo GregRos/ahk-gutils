@@ -1,7 +1,7 @@
 #include glang.ahk
 
 ; An invoker for handily invoking virtual methods.
-class gVtableInvoker extends gDeclaredMembersOnly {
+class gVtableInvoker {
     _ref := ""
     _onDispose := []
     __New(ref, dependencies = "") {
@@ -31,8 +31,8 @@ class gVtableInvoker extends gDeclaredMembersOnly {
 }
 
 ; Returns an invoker for COM vtable calls.
-gSys_ComInvoker(ref, dependencies := "") {
-    return new gVtableInvoker(ref, dependencies)
+gSys_ComVTableInvoker(ref, dependencies := "") {
+    return gLang_CreateMemberCheckingProxy(new gVtableInvoker(ref, dependencies))
 }
 
 ; Get the current PID.

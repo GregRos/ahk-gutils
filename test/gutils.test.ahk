@@ -67,7 +67,7 @@ z__gutils_test() {
     b := {a: 1, b: 2}
     gObj_Assign(a, b)
     gAssert_eq(a, {a: 1, b: 2, c: 4})
-    gAssert_Eq(!!gSys_ComInvoker(0, ""), True)
+    gAssert_Eq(!!gSys_ComVTableInvoker(0, ""), True)
     gAssert_Gtr(gSys_Pid(), 1000)
 
     gAssert_Eq(gWin_IsMouseCursorVisible(), True)

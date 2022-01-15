@@ -1,8 +1,13 @@
 
-class gOutFile extends gDeclaredMembersOnly {
+class gOutFile {
     _fOut := ""
     _fErr := ""
     _stripAnsi := ""
+
+    New(fOut, fErr) {
+        return gLang_CreateMemberCheckingProxy(new gOutFile(fOut, fErr))
+    }
+    
     __New(fOut, fErr){
         base.__New()
         this._fOut := fOut
@@ -18,9 +23,9 @@ class gOutFile extends gDeclaredMembersOnly {
     }
 }
 
-class gOutDebug extends gDeclaredMembersOnly {
-    __New() {
-        base.__New()
+class gOutDebug  {
+    New() {
+        return gLang_CreateMemberCheckingProxy(new gOutDebug())
     }
 
     Out(args*) {
@@ -32,10 +37,15 @@ class gOutDebug extends gDeclaredMembersOnly {
     }
 }
 
-class gOutAll extends gDeclaredMembersOnly {
+class gOutAll {
     _all := ""
+
+
+    New(all) {
+        return new gOutAll(all)
+    }
+
     __New(all) {
-        base.__New()
         this._all := all
     }
 

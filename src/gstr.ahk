@@ -265,7 +265,6 @@ gStr_Is(ByRef self) {
 ; Returns the char at position `pos`.
 gStr_At(ByRef self, pos) {
     z__gutils__assertNotObject(self, pos)
-    pos := z__gutils_NormalizeIndex(pos, StrLen(self))s
     return SubStr(self, pos, 1)
 }
 
@@ -340,23 +339,4 @@ gStr_Matches(ByRef self, needle, options := "", pos := 1) {
     Return array
 }
 
-
-; A path that's been parsed into its components.
-class gParsedPath extends gDeclaredMembersOnly {
-    root := ""
-    path := ""
-    filename := ""
-    dir := ""
-    fileNoExt := ""
-    ext := ""
-    drive := ""
-    __New(path) {
-        SplitPath, % path, file, dir, ext, fileNoExt, drive
-        this.filename := file
-        this.dir := dir
-        this.ext := ext
-        this.fileNoExt := fileNoExt
-        this.drive := drive
-    }
-}
 

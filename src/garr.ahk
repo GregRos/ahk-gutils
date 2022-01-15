@@ -129,13 +129,6 @@ gArr_Is(self) {
     return IsObject(self) && self.MaxIndex() != ""
 }
 
-; Gets the element at position `pos`. Supports inverse indexing.
-gArr_At(self, pos) {
-    z__gutils_assertType(self, "Object")
-    nIndex := z__gutils_NormalizeIndex(pos, self.MaxIndex())
-    return self[nIndex]
-}
-
 ; Returns a new array that's `self` in reverse order.
 gArr_Reverse(self) {
     z__gutils_assertType(self, "Object")

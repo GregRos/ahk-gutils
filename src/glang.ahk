@@ -47,24 +47,22 @@ gLang_Call(funcOrName, args*) {
 }
 
 ; Represents an entry in a stack trace.
-class gStackFrame extends gDeclaredMembersOnly {
-    File := ""
-    Line := ""
-    Function := ""
-    Offset := ""
-    __New(file, line, function, offset) {
-        this.File := File
-        this.Line := line
-        this.Function := function
-        this.Offset := offset
-    }
+class gStackFrame {
 
     ToString() {
         x := Format("{1}:{2} {4}+{3} ", e.File, e.Line, e.Function, e.Offset)
         return x
     }
-}
 
+    New(file, line, function, offset) {
+        frame := new gStackFrame()
+        frame.File := file
+        frame.Line := line
+        frame.Function := function
+        frame.Offset := offset
+        return gLang_CreateMemberCheckingProxy(frame)
+    }
+}
 z__gutils_printStack(frames) {
     text := ""
     for i, frame in frames {
@@ -91,7 +89,7 @@ gLang_StackTrace(ignoreLast := 0) {
         if (e.What == offset && offset != 0) {
             break
         }
-        frames.Push(new gStackFrame(e.File, e.Line, e.What, offset))
+        frames.Push(gStackFrame.New(e.File, e.Line, e.What, offset))
     }
     ; In this state, the File:Line refer to the place where execution entered What.
     ; That's actually not very useful. I want it to have What's location instead. So we nbeed
@@ -112,7 +110,7 @@ gLang_StackTrace(ignoreLast := 0) {
 
 z__gutils_NormalizeIndex(negIndex, length) {
     if (negIndex <= 0) {
-        return length + negIndex
+        return length + negIndex + 1
     }
     return negIndex
 }
@@ -213,18 +211,23 @@ gType_IsSpecialName(name) {
 
 class gMemberCheckingProxy {
     _target := ""
-    _checking := True
+    _state := 0
     __New(target) {
+        if (!target) {
+            gEx_Throw(Format("Error - target is empty: '{1}'.", target))
+        }
         tn := z__gutils_getTypeName(target)
         if (tn != "") {
             gEx_Throw(Format("Can't create a proxy for '{1}', it's a built-in object.", tn))
         }
         this._target := target
+        this._checking := True
     }
 
     __Call(name, args*) {
-        target := this._target
-        if (!this._checking || gType_IsSpecialName(name)) {
+        target := ObjRawGet(this, "_target")
+        checking := ObjRawGet(this, "_checking")
+        if (!checking || gType_IsSpecialName(name)) {
             return target[name].Call(target, args*)
         }
         if (target.__Call) {
@@ -243,13 +246,18 @@ class gMemberCheckingProxy {
     }
 
     __Set(name, args*) {
-        target := this._target
-        if (target.__Set) {
-            return target.__Set.Call(target, name, args*)
-        }
         value := args.Pop()
         keys := args
-        if (!this._checking || gType_IsSpecialName(name)) {
+        target := ObjRawGet(this, "_target")
+        if (!target) {
+            return ObjRawSet(this, name, value)
+        }
+        checking := ObjRawGet(this, "_checking")
+        if (target.__Set) {
+            args.Push(value)
+            return target.__Set.Call(target, name, args*)
+        }
+        if (!checking || gType_IsSpecialName(name)) {
             return target[name, keys*] := value
         }
         property := gObj_RawGet(target, name, True, found)
@@ -265,11 +273,15 @@ class gMemberCheckingProxy {
     }
 
     __Get(name, keys*) {
-        target := this._target
+        target := ObjRawGet(this, "_target")
+        if (!target) {
+            return ObjRawGet(this, name)
+        }
+        checking := ObjRawGet(this, "_checking")
         if (target.__Get) {
             return target.__Get.Call(target, name, keys*)
         }
-        if (!this._checking || gLang_IsSpecialName(name)) {
+        if (!checking || gType_IsSpecialName(name)) {
             return target[name, keys*]
         }
         prop := gObj_RawGet(target, name, True, found)
@@ -283,59 +295,10 @@ class gMemberCheckingProxy {
     }
 }
 
-; Utility class with name verification services.
-; Inherit from this if you want your class to only have declared members (methods, properties, and fields assigned in the initializer), so that unrecognized keys will result in an error.
-; The class implements __Get, __Call, and __Set.
-class gDeclaredMembersOnly {
-
-    __Call(name, params*) {
-        if (!gType_IsSpecialName(name) && !ObjRawGet(this, "__gutils_noVerification")) {
-            gEx_Throw("Tried to call undeclared name '{1}'", name)
-        } 
-    }
-
-    __New() {
-
-    }
-
-    __Init() {
-        ; We want to disable name verification to allow the extending object's initializer to safely initialize the type's fields.
-        if (ObjRawGet(this, "__gutils_noVerification")) {
-            return
-        }
-        ObjRawSet(this, "__gutils_memberVerification", true)
-        ObjRawSet(this, "__gutils_noVerification", true)
-
-        this.__Init()
-        this.Delete("__gutils_noVerification")
-
-    }
-
-    __Get(name) {
-        if (!gType_IsSpecialName(name) && !ObjRawGet(this, "__gutils_noVerification")) {
-            gEx_Throw(Format("Tried to get the value of undeclared name '{1}'.", name))
-        }
-    }
-
-    __Set(name, values*) {
-        if (!gType_IsSpecialName(name) && !ObjRawGet(this, "__gutils_noVerification")) {
-            gEx_Throw(Format("Tried to set the value of undeclared name '{1}'.", name))
-        }
-    }
-
-    __IsVerifying {
-        get {
-            return !ObjRawGet(this, "__gutils_noVerification")
-        }
-    }
-
-    __RawGet(name) {
-        this.__DisableVerification()
-        value := this[name]
-        this.__EnableVerification()
-        return value
-    }
+gLang_CreateMemberCheckingProxy(target) {
+    return new gMemberCheckingProxy(target)
 }
+
 
 class gOopsError {
     type := ""
@@ -400,24 +363,4 @@ gLang_Equal(a, b, case := False) {
         return True
     }
     return False
-}
-
-class gFuncList extends gDeclaredMembersOnly {
-
-    __New(inner) {
-        this._inner := inner
-    }
-
-    Call(args*) {
-        arr := []
-        for i, f in this._inner {
-            arr.Push(f.Call(args*))
-        }
-        return arr
-    }
-
-}
-
-gLang_FuncList(funcs*) {
-    return new gFuncList(funcs)
 }

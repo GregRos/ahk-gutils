@@ -83,7 +83,7 @@ z__gutils_WinGet(hwnd, subCommand) {
 }
 
 ; A reference to a specific window that lets you gets info about it.
-class gWinInfo extends gDeclaredMembersOnly {
+class gWinInfo {
     hwnd := ""
 
     __New(hwnd) {
@@ -246,6 +246,9 @@ class gWinInfo extends gDeclaredMembersOnly {
         WinActivate, % this._winTitle()
     }
 
+    New(hwnd) {
+        return gLang_CreateMemberCheckingProxy(new gWinInfo(hwnd))
+    }
 }
 
 ; Performs a query on windows given query object `query`, returning the first matching window.
@@ -257,7 +260,7 @@ gWin_Get(query) {
         if (hwnd = 0) {
             return ""
         }
-        return new gWinInfo(hwnd)
+        return gWinInfo.New(hwnd)
     } finally {
         z__gutils_maybeSetMatchingInfo(old)
     }
@@ -270,7 +273,7 @@ gWin_List(query) {
     arr := []
     Loop, % win 
     {
-        arr.push(win%A_Index%)
+        arr.push(gWinInfo.New(win%A_index%))
     }
     v := arr
 }

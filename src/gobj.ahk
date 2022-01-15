@@ -36,7 +36,7 @@ gObj_Keys(self, inherited := False) {
 }
 
 ; A class for validating object inputs.
-class gObjValidator extends gDeclaredMembersOnly {
+class gObjValidator {
     requiredKeys := ""
     optionalKeys := False
     name := ""
@@ -77,11 +77,15 @@ class gObjValidator extends gDeclaredMembersOnly {
         }
         return {valid: True}
     }
+
+    New(name, requiredKeys, optionalKeys) {
+        return gLang_CreateMemberCheckingProxy(new gObjValidator(name, requiredKeys, optionalKeys))
+    }
 }
 
 ; Returns a new validator. Use Validator.Check and Validator.Assert.
 gObj_NewValidator(name, requiredKeys := "", optionalKeys := True) {
-    return new gObjValidator(name, requiredKeys, optionalKeys)
+    return gObjValidator.New(name, requiredKeys, optionalKeys)
 }
 
 ; Returns a subset of `self` including only keys from `keys`.
