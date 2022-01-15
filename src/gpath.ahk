@@ -18,7 +18,7 @@ class gParsedPath  {
     }
 
     New(path) {
-        return gLang_SmartProxy(new gParsedPath(path))
+        return gObj_Checked(new gParsedPath(path))
     }
 }
 

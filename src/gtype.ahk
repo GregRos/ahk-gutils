@@ -146,7 +146,7 @@ gLang_Bool(bool, type := "TrueFalse") {
 gType_IsSpecialName(name) {
     static builtInNames := {__Call: 2, base : 2
         , __get: 2, __set: 2
-        ,__new: 2, __gutils_noVerification: 2
+        ,__new: 2
         , __init: 2, __class: 2
         ,_NewEnum: 1, HasKey: 1
         ,Clone: 1, GetAddress: 1
@@ -155,15 +155,17 @@ gType_IsSpecialName(name) {
         ,Length: 1, Delete: 1
         ,Push: 1, Pop: 1
         ,InsertAt: 1,RemoveAt: 1
+        ,Call:1
     ,Insert: 1, Remove: 1}
-
-    return builtInNames.HasKey(name) ? builtInNames[name] : 0
+    
+    has := ObjHasKey(builtInNames, name)
+    return has ? builtInNames[name] : 0
 }
 
 class gMemberCheckingProxy {
-    _target := ""
-    _checking := False
-    _modes := ""
+    __gproxy_target := ""
+    __gproxy_checking := False
+    __gproxy_modes := ""
 
     ; Modes - f[rozen], 
     __New(target, modes := "") {
@@ -174,88 +176,97 @@ class gMemberCheckingProxy {
         if (tn != "") {
             gEx_Throw(Format("Can't create a proxy for '{1}', it's a built-in object.", tn))
         }
-        this._target := target
-        this._modes := modes
-        this._checking := True
-        
+        this.__gproxy_target := target
+        this.__gproxy_modes := modes
+        this.__gproxy_checking := True
     }
 
-    _targetGet(name, byref found) {
-        target := ObjRawGet(this, "_target")
-        return gObj_RawGet(target, name, True, found)
+    __gproxy_target_get(name, byref found) {
+        target := ObjRawGet(this, "__gproxy_target")
+        z := gObj_RawGet(target, name, True, found)
+        return z
     }
 
     __Call(name, args*) {
-        target := ObjRawGet(this, "_target")
-        checking := ObjRawGet(this, "_checking")
-        if (!checking || gType_IsSpecialName(name)) {
-            return target[name].Call(target, args*)
+        if (!gStr_StartsWith(name, "__gproxy_")) {
+            target := ObjRawGet(this, "__gproxy_target")
+            checking := ObjRawGet(this, "__gproxy_checking")
+            if (!checking || gType_IsSpecialName(name)) {
+                return target[name].Call(target, args*)
+            }
+            if (target.__Call) {
+                return target.__Call.Call(target, name, args*)
+            }
+            isSpec := gType_IsSpecialName(name)
+            if (isSpec) {
+                ; Can't do checking for special names without hardcoding them
+                return target[name].Call(target, args*)
+            }
+            found := 0
+            value := this.__gproxy_target_get(name, found)
+            if (!found && !value) {
+                gEX_Throw(Format("Tried to call name '{1}', but it doesn't exist.", name))
+            }
+            return gFunc_Checked(value).Call(target, args*)
         }
-        if (target.__Call) {
-            return target.__Call.Call(target, name, args*)
-        }
-        if (gType_IsSpecialName(name)) {
-            ; Can't do checking for special names without hardcoding them
-            return target[name].Call(target, args*)
-        }
-        value := this._targetGet(name, found)
-        if (!found) {
-            gEX_Throw(Format("Tried to call name '{1}', but it doesn't exist.", name))
-        }
-        z__gutils_callableWith(value, args*)
-        return value.Call(target, args*)
     }
 
     __Set(name, args*) {
-        value := args.Pop()
-        keys := args
-        target := ObjRawGet(this, "_target")
-        if (!target) {
-            return ObjRawSet(this, name, value)
+        if (!gStr_StartsWith(name, "__gproxy_")) {
+            value := args.Pop()
+            keys := args
+            target := ObjRawGet(this, "__gproxy_target")
+            if (!target) {
+                return ObjRawSet(this, name, value)
+            }
+            if (target.__Set) {
+                args.Push(value)
+                return target.__Set.Call(target, name, args*)
+            }
+            checking := ObjRawGet(this, "__gproxy_checking")
+            if (!checking || gType_IsSpecialName(name)) {
+                return target[name, keys*] := value
+            }
+            found := False
+            property := this.__gproxy_target_get(name, found)
+            if (!found) {
+                gEx_Throw(Format("Tried to set name '{1}', but it wasn't defined.", name))
+            }
+            if (gType_Is(property, "Property") && !property.set) {
+                gEx_Throw(Format("Tried to set name '{1}', but it was a property with no setter.", name))
+            }
+            ; It's defined and settable
+            target[name, keys*] := value
+            return value
         }
-        if (target.__Set) {
-            args.Push(value)
-            return target.__Set.Call(target, name, args*)
-        }
-        checking := ObjRawGet(this, "_checking")
-        if (!checking || gType_IsSpecialName(name)) {
-            return target[name, keys*] := value
-        }
-        property := this._targetGet(name, found)
-        if (!found) {
-            gEx_Throw(Format("Tried to set name '{1}', but it wasn't defined.", name))
-        }
-        if (gType_Is(property, "Property") && !property.set) {
-            gEx_Throw(Format("Tried to set name '{1}', but it was a property with no setter."))
-        }
-        ; It's defined and settable
-        target[name, keys*] := value
-        return value
     }
 
     __Get(name, keys*) {
-        target := ObjRawGet(this, "_target")
-        if (!target) {
-            return ObjRawGet(this, name)
-        }
-        checking := ObjRawGet(this, "_checking")
-        if (target.__Get) {
-            return target.__Get.Call(target, name, keys*)
-        }
-        if (!checking || gType_IsSpecialName(name)) {
+        if (!gStr_StartsWith(name, "__gproxy_")) {
+            target := ObjRawGet(this, "__gproxy_target")
+            if (!target) {
+                return ObjRawGet(this, name)
+            }
+            checking := ObjRawGet(this, "__gproxy_checking")
+            if (target.__Get) {
+                return target.__Get.Call(target, name, keys*)
+            }
+            if (!checking || gType_IsSpecialName(name)) {
+                return target[name, keys*]
+            }
+            found := False
+            prop := this.__gproxy_target_get(name, found)
+            if (!found) {
+                gEx_Throw(Format("Tried to get name '{1}', but it wasn't defined.", name))
+            }
+            if (gType_Is(prop, "Property") && !prop.get) {
+                gEx_Throw(Format("Tried to get name '{1}', but it was a property with no setter.", name))
+            }
             return target[name, keys*]
         }
-        prop := gObj_RawGet(name, found)
-        if (!found) {
-            gEx_Throw(Format("Tried to get name '{1}', but it wasn't defined."))
-        }
-        if (gType_Is(prop, "Property") && !prop.get) {
-            gEx_Throw(Format("Tried to get name '{1}', but it was a property with no setter."))
-        }
-        return target[name, keys*]
     }
 }
 
-gLang_SmartProxy(target) {
+gObj_Checked(target) {
     return new gMemberCheckingProxy(target)
 }

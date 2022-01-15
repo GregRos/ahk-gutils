@@ -247,7 +247,7 @@ class gWinInfo {
     }
 
     New(hwnd) {
-        return gLang_SmartProxy(new gWinInfo(hwnd))
+        return gObj_Checked(new gWinInfo(hwnd))
     }
 }
 

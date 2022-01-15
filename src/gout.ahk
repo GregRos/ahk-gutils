@@ -5,7 +5,7 @@ class gOutFile {
     _stripAnsi := ""
 
     New(fOut, fErr) {
-        return gLang_SmartProxy(new gOutFile(fOut, fErr))
+        return gObj_Checked(new gOutFile(fOut, fErr))
     }
     
     __New(fOut, fErr){
@@ -25,7 +25,7 @@ class gOutFile {
 
 class gOutDebug  {
     New() {
-        return gLang_SmartProxy(new gOutDebug())
+        return gObj_Checked(new gOutDebug())
     }
 
     Out(args*) {

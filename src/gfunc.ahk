@@ -32,7 +32,7 @@ class gFuncSchema {
         x := new gFuncSchema()
         x.name := ""
         x.args := []
-        return gLang_SmartProxy(x)
+        return gObj_Checked(x)
     }
 
     IsVariadic {
@@ -94,16 +94,16 @@ z__gutils_parseSchema(str) {
                 gEx_Throw(Format("Unknown postfix schema flag '{1}'.", char))
             }
         }
-        schema.args.Push(gLang_SmartProxy(arg))
+        schema.args.Push(gObj_Checked(arg))
     }
     return schema
 }
 
-class gCheckedFunc {
+class gCheckedCallable {
     _callable := ""
     _schema := ""
 
-    Call(args*) {
+    AssertCallable(args*) {
         schema := this._schema
         if (args.MaxIndex() < schema.MinParams) {
             gEx_Throw(Format("Tried to call function '{1}'. It needs at least {2} params, got {3}.", schema.Name, schema.MinParams, args.MaxIndex()))
@@ -111,7 +111,10 @@ class gCheckedFunc {
         if (args.MaxIndex() > schema.MaxParams && !schema.IsVariadic) {
             gEx_Throw(Format("Tried to call function '{1}'. It needs at most {2} params, got {3}.", schema.name, schema.MaxParams, args.MaxIndex()))
         }
+    }
 
+    Call(args*) {
+        this.AssertCallable(args*)
         return this._callable.Call(args*)
     }
 
@@ -126,10 +129,10 @@ class gCheckedFunc {
     }
 
     New(target, schema) {
-        cur := new gCheckedFunc()
+        cur := new gCheckedCallable()
         cur._callable := target
         cur._schema := schema
-        return gLang_SmartProxy(cur)
+        return gObj_Checked(cur)
     }
 }
 
@@ -138,8 +141,8 @@ gFunc_Checked(what, schema := "") {
         if (!gType_Is(what, "Func")) {
             gEx_Throw(Format("Input is not a Func, and no param signatures were specified."))
         }
-        return new gCheckedFunc(what, what)
+        return gCheckedCallable.New(what, what)
     }
     result := z__gutils_parseSchema(schema)
-    return new gCheckedFunc(what, result)
+    return gCheckedCallable.New(what, result)
 }

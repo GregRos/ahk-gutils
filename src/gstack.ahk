@@ -13,7 +13,7 @@ class gStackFrame {
         frame.Line := line
         frame.Function := function
         frame.Offset := offset
-        return gLang_SmartProxy(frame)
+        return frame
     }
 }
 

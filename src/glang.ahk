@@ -21,7 +21,6 @@ gLang_VarExists(ByRef var) {
     return &var = &something ? 0 : var = "" ? 2 : 1 
 }
 
-
 z__gutils_NormalizeIndex(negIndex, length) {
     if (negIndex <= 0) {
         return length + negIndex
@@ -29,11 +28,10 @@ z__gutils_NormalizeIndex(negIndex, length) {
     return negIndex
 }
 
-
 ; Gets a value from an object, possibly deep. If the value is found, the byref out will be modified.
 gObj_RawGet(what, key, deep := False, byref found := "") {
+    found := False
     if (z__gutils_getTypeName(what)) {
-        found := False
         return ""
     }
     while (IsObject(what)) {
@@ -54,9 +52,9 @@ gObj_Has(what, key, deep := False) {
     return found
 }
 
-z__gutils_callableWith(what, args*) {
+z__gutils_callableWith(value, args*) {
     typeName := z__gutils_getTypeName(value)
-    
+
     if (typeName = "Primitive") {
         gEx_Throw(Format("Tried to call name '{1}', but it was a primitive."))
     }
@@ -64,25 +62,16 @@ z__gutils_callableWith(what, args*) {
         ; Can't do any checking with BoundFuncs
         return True
     }
-    if (typeName != "Func" && typeName != "gSpecFunction") {
+    if (typeName != "Func") {
         ; Custom objects will also behave in weird ways...
         if (gObj_Has(value, "Call")) {
             return True
         }
         ; But this one doesn't have 'Call'
-        gEx_Throw(Format("Tried to call name '{1}', but it was an uncallable object."))
-    }
-    ; This is a Func then we can do some checks
-    if (args.MaxIndex() < value.MinParams) {
-        gEx_Throw(Format("Tried to call name '{1}'. It needs at least {2} params, got {3}.", name, value.MinParams, args.MaxIndex()))
-    }
-    if (args.MaxIndex() > value.MaxParams && !value.IsVariadic) {
-        gEx_Throw(Format("Tried to call name '{1}'. It needs at most {2} params, got {3}.", name, value.MaxParams, args.MaxIndex()))
+        gEx_Throw(Format("Tried to call name '{1}', but it was an uncallable object."), n)
     }
     return True
 }
-
-
 
 class gOopsError {
     type := ""
@@ -114,10 +103,10 @@ gEx_ThrowObj(ex, ignoreLastInTrace := 0) {
         gEx_Throw(ex, , , , ignoreLastInTrace + 1) 
         return
     }
-    ex.StackTrace := gLang_StackTrace(ignoreLastInTrace + 1)
-    ex.What := ex.StackTrace[1].Function
-    ex.Offset := ex.StackTrace[1].Offset
-    ex.Line := ex.StackTrace[1].Line
+    ex.trace := gLang_StackTrace(ignoreLastInTrace + 1)
+    ex.What := ex.trace[1].Function
+    ex.Offset := ex.trace[1].Offset
+    ex.Line := ex.trace[1].Line
     Throw ex
 }
 
@@ -147,4 +136,32 @@ gLang_Equal(a, b, case := False) {
         return True
     }
     return False
+}
+
+class gObjectSchema {
+    New(definitions) {
+        self := new gObjectSchema()
+        self._definitions := definitions
+        return gObj_Checked(self)
+    }
+
+    CanGet(name) {
+        schema := this._definitions[name]
+        if (IsObject(schema)) {
+            gEx_throw(Format("Name '{1}'' is a method.", name))
+        }
+        return gStr_IndexOf(name, "get")
+    }
+
+    CanSet(name) {
+        schema := this._definitions[name]
+        if (IsObject(schema)) {
+            gEx_throw(Format("Name '{1}'' is a method.", name))
+        }
+        return gStr_IndexOf(name, "get")
+    }
+    
+    CanCall(name, args*) {
+        
+    }
 }

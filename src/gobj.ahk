@@ -79,7 +79,7 @@ class gObjValidator {
     }
 
     New(name, requiredKeys, optionalKeys) {
-        return gLang_SmartProxy(new gObjValidator(name, requiredKeys, optionalKeys))
+        return gObj_Checked(new gObjValidator(name, requiredKeys, optionalKeys))
     }
 }
 

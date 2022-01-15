@@ -290,7 +290,7 @@ class gRegEx {
     }
 
     New(search, options := "") {
-        return gLang_SmartProxy(new gRegEx(search, options))
+        return gObj_Checked(new gRegEx(search, options))
     }
 
     Value {

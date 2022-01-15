@@ -42,12 +42,12 @@ z__gutils_detectVsCode() {
 gEx_Print(ex) {
     clone := ex.Clone()
     stackTraceLines := []
-    if (ex.StackTrace) {
-        for ix, entry in ex.StackTrace {
+    if (ex.trace) {
+        for ix, entry in ex.trace {
             stackTraceLines.Push(entry.Function " (" entry.File ":" entry.Line ")")
         }
     }
-    clone.StackTrace := stackTraceLines
+    clone.trace := stackTraceLines
     return JSON.Dump(clone,,2)
 }
 
@@ -61,7 +61,7 @@ z__gutils_ex_gui_clickedList() {
             if (!row) {
                 Return
             }
-            stackEntry := z__gutils_currentError.StackTrace[row]
+            stackEntry := z__gutils_currentError.trace[row]
             latestCodeWindow := gWin_Get({title: "ahk_pid " z__gutils_vsCodeProcess.Pid})
             latestCodeWindow.Activate()
             sourceLocation := stackEntry.File
@@ -140,7 +140,7 @@ z__gutils_openExceptionGuiFor(ex) {
         if (imageList) {
             LV_SetImageList(imageList)
         }
-        for ix, entry in ex.StackTrace {
+        for ix, entry in ex.trace {
             SplitPath, % entry.File, filename
             LV_Add("", ix, entry.Function, filename, entry.Line, entry.Offset)
         }

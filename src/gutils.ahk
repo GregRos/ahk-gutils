@@ -2,6 +2,9 @@
 ; Contains utility commonly used utility functions.
 ; Meant to be reusable.
 ; ================================================================
+#include gfunc.ahk
+#include gtype.ahk
+#include gstack.ahk
 #include glang.ahk
 #include garr.ahk
 #include gobj.ahk
