@@ -157,7 +157,7 @@ gType_IsSpecialName(name) {
         ,InsertAt: 1,RemoveAt: 1
         ,Call:1
     ,Insert: 1, Remove: 1}
-    
+
     has := ObjHasKey(builtInNames, name)
     return has ? builtInNames[name] : 0
 }
@@ -171,10 +171,6 @@ class gMemberCheckingProxy {
     __New(target, modes := "") {
         if (!target) {
             gEx_Throw(Format("Error - target is empty: '{1}'.", target))
-        }
-        tn := z__gutils_getTypeName(target)
-        if (tn != "") {
-            gEx_Throw(Format("Can't create a proxy for '{1}', it's a built-in object.", tn))
         }
         this.__gproxy_target := target
         this.__gproxy_modes := modes
@@ -267,6 +263,23 @@ class gMemberCheckingProxy {
     }
 }
 
+class gSpecCheckingProxy extends gMemberCheckingProxy {
+    __gproxy_spec := ""
+    __New(target, spec) {
+        base.__New(target)
+        this.__gproxy_spec := spec
+    }
+
+    __gproxy_target_get(name) {
+        
+    }
+    
+}
+
 gObj_Checked(target) {
+    tn := z__gutils_getTypeName(target)
+    if (tn != "") {
+        gEx_Throw(Format("Can't create a proxy for '{1}', it's a built-in object.", tn))
+    }
     return new gMemberCheckingProxy(target)
 }

@@ -18,6 +18,10 @@ class Example {
     }
 }
 
+z__gutils_replace(match) {
+    return Format("-{1}-", match.Value(1))
+}
+
 z__gutils_test() {
     gAssert_Eq(gLang_VarExists(bzzt), 0)
     gAssert_Eq(IsObject(gLang_Func("gAssert_Gtr")), True)
@@ -101,9 +105,16 @@ z__gutils_test() {
     gAssert_Eq(testSubkey.HasV("should_be_100"), True)
     testSubkey.EraseValue("should_be_100")
     gAssert_Eq(testSubkey.Get("should_be_100"), "")
-
     testSubkey.Erase()
 
+    regex := gStr_Regex("steve", "i")
+    gAssert_Eq(regex.First("My name is STEVE.").Value(), "STEVE")
+    gAssert_Eq(regex.Replace("My name is steve.", "mike"), "My name is mike.")
+    
+
+    regex := gStr_Regex(",(!),")
+    gAssert_Eq(regex.Split("a,!,b,c,"), ["a", "!", "b,c,"])
+    gAssert_Eq(regex.Replace("a,!,b,c,", Func("z__gutils_replace")), "a-!-b,c,")
     ExitApp
 }
 

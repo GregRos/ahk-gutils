@@ -287,55 +287,79 @@ class gRegEx extends gMemberCheckingProxy {
             this.search := search
             this.options := options
             if (!gStr_IndexOf(options, "O")) {
-                this.options := "O"
+                this.options .= "O"
             }
         }
 
         Value {
             get {
-                return gArr_Join(this.options, this.search, ")")
+                return gArr_Join([this.options, this.search], ")")
             }
         }
 
         First(ByRef haystack, pos := 1) {
             z__gutils__assertNotObject(haystack, pos)
-            needle := options "O)" needle
-            RegExMatch(self, needle, match, pos)
+            needle := this.Value
+            RegExMatch(haystack, needle, match, pos)
             return match
         }
 
-        All(ByRef haystack, pos := 1) {
+        Replace(ByRef haystack, replacement := "", pos := 1, limit := -1) {
+            arr := []
+            for i, m in this.All(haystack, pos, limit) {
+                untouched := gStr_Slice(haystack, pos, m.Pos() - 1)
+                arr.Push(untouched)
+                if (gType_Is(replacement, "Primitive")) {
+                    arr.Push(replacement)
+                }
+                else if (replacement.Call || gType_Is(replacement, "Func")) {
+                    arr.Push(replacement.Call(m))
+                } else {
+                    gEx_Throw("Invalid replacement value.")
+                }
+                pos := m.Pos() + m.Len()
+            }
+            arr.Push(gStr_Slice(haystack, pos))
+            return gArr_Join(arr, "")
+        }
+
+        All(ByRef haystack, pos := 1, limit := -1) {
             z__gutils__assertNotObject(haystack, pos)
             array:=[]
 
             while (1) {
-                pos := RegExMatch(self, this.Value, match, pos)
+                if (limit > 0 && limit < A_Index) {
+                    break
+                }
+                pos := RegExMatch(haystack, this.Value, match, pos)
+                
                 if (!pos) {
                     break
                 }
                 array.Push(match)
-                pos := match.Len(0)
+                pos += match.Len()
             }
             Return array
         }
 
-        Split(byref haystack, limit := -1, pos := 1) {
+        Split(byref haystack, pos := 1, limit := -1) {
             limit := limit = -1 ? 10000000 : limit
             array := []
             for i, match in this.All(haystack, pos) {
                 if (limit > -1 && i > limit) {
                     break
                 }
-
+                array.Push(gStr_Slice(haystack, pos, match.Pos() - 1))
+                Loop, % match.Count()
+                {
+                    array.Push(match.Value(A_Index))
+                }
+                pos := match.Pos() + match.Len()
             }
+            array.Push(gStr_Slice(haystack, pos))
+            return array
         }
 
-        Replace(ByRef haystack, replacement, limit := -1, pos := 1) {
-            if (gType_Is(haystack, "primitive")) {
-                return RegExReplace(haystack, this.Value,, limit, pos)
-            }
-
-        }
     }
 
     __New(search, options := "") {

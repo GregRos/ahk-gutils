@@ -104,52 +104,53 @@ z__gutils_parseSchema(str) {
     return schema
 }
 
-class gCheckedCallable extends gMemberCheckingProxy {
-    class Inner {
-        _callable := ""
-        _schema := ""
-        __New(target, schema) {
-            this._callable := target
-            this._schema := schema
-        }
-        AssertCallable(args*) {
-            schema := this._schema
-            if (args.MaxIndex() < schema.MinParams) {
-                gEx_Throw(Format("Tried to call function '{1}'. It needs at least {2} params, got {3}.", schema.Name, schema.MinParams, args.MaxIndex()))
-            }
-            if (args.MaxIndex() > schema.MaxParams && !schema.IsVariadic) {
-                gEx_Throw(Format("Tried to call function '{1}'. It needs at most {2} params, got {3}.", schema.name, schema.MaxParams, args.MaxIndex()))
-            }
-        }
+class gCheckedCallable {
 
-        Call(args*) {
-            this.AssertCallable(args*)
-            return this._callable.Call(args*)
+    _callable := ""
+    _schema := ""
+    __New(target, schema) {
+        this._callable := target
+        this._schema := schema
+    }
+    AssertCallable(args*) {
+        schema := this._schema
+        if (args.MaxIndex() < schema.MinParams) {
+            gEx_Throw(Format("Tried to call function '{1}'. It needs at least {2} params, got {3}.", schema.Name, schema.MinParams, args.MaxIndex()))
         }
+        if (args.MaxIndex() > schema.MaxParams && !schema.IsVariadic) {
+            gEx_Throw(Format("Tried to call function '{1}'. It needs at most {2} params, got {3}.", schema.name, schema.MaxParams, args.MaxIndex()))
+        }
+    }
 
-        Validate() {
-            minArgs := ""
-            isOptional := False
-            for i, a in this._schema.args {
-                if (!a.IsOptional && isOptional) {
-                    gEx_Throw(Format("Optional arguments invalid."))
-                }
+    Call(args*) {
+        this.AssertCallable(args*)
+        return this._callable.Call(args*)
+    }
+
+    Validate() {
+        minArgs := ""
+        isOptional := False
+        for i, a in this._schema.args {
+            if (!a.IsOptional && isOptional) {
+                gEx_Throw(Format("Optional arguments invalid."))
             }
         }
     }
 
-    __New(target, schema := "") {
-        cur := new this.Inner(target, schema)
-        base.__New(cur)
-    }
 }
 
 gFunc_Checked(what, schema := "") {
     if (!schema) {
+        if (gType_Is(what, gCheckedCallable)) {
+            return what
+        }
         if (!gType_Is(what, "Func")) {
             gEx_Throw(Format("Input is not a Func, and no param signatures were specified."))
         }
         return new gCheckedCallable(what, what)
+    }
+    if (gType_Is(what, gCheckedCallable)) {
+        gEx_Throw("Cannot apply schema to a Checked function.")
     }
     result := z__gutils_parseSchema(schema)
     return new gCheckedCallable(what, result)
