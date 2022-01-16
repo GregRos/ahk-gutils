@@ -82,6 +82,13 @@ gStr(obj) {
     if (!IsObject(obj)) {
         return "" + obj
     }
+    tn := z__gutils_getTypeName(obj)
+    if (tn) {
+        return tn
+    }
+    if (gType_Is(obj, gMemberCheckingProxy)) {
+        obj := ObjRawGet(obj, "__gproxy_target")
+    }
     if (obj.MaxIndex() != "") {
         stringified := gArr_Map(obj, "gStr")
         return "[" gArr_Join(stringified, ", ") "]"
@@ -278,92 +285,85 @@ class gMatch {
     }
 }
 
-class gRegEx extends gMemberCheckingProxy {
-
-    class Inner {
-        search := ""
-        options := ""
-        __New(search, options := "") {
-            this.search := search
-            this.options := options
-            if (!gStr_IndexOf(options, "O")) {
-                this.options .= "O"
-            }
+class gRegEx {
+    search := ""
+    options := ""
+    __New(search, options := "") {
+        this.search := search
+        this.options := options
+        if (!gStr_IndexOf(options, "O")) {
+            this.options .= "O"
         }
-
-        Value {
-            get {
-                return gArr_Join([this.options, this.search], ")")
-            }
-        }
-
-        First(ByRef haystack, pos := 1) {
-            z__gutils__assertNotObject(haystack, pos)
-            needle := this.Value
-            RegExMatch(haystack, needle, match, pos)
-            return match
-        }
-
-        Replace(ByRef haystack, replacement := "", pos := 1, limit := -1) {
-            arr := []
-            for i, m in this.All(haystack, pos, limit) {
-                untouched := gStr_Slice(haystack, pos, m.Pos() - 1)
-                arr.Push(untouched)
-                if (gType_Is(replacement, "Primitive")) {
-                    arr.Push(replacement)
-                }
-                else if (replacement.Call || gType_Is(replacement, "Func")) {
-                    arr.Push(replacement.Call(m))
-                } else {
-                    gEx_Throw("Invalid replacement value.")
-                }
-                pos := m.Pos() + m.Len()
-            }
-            arr.Push(gStr_Slice(haystack, pos))
-            return gArr_Join(arr, "")
-        }
-
-        All(ByRef haystack, pos := 1, limit := -1) {
-            z__gutils__assertNotObject(haystack, pos)
-            array:=[]
-
-            while (1) {
-                if (limit > 0 && limit < A_Index) {
-                    break
-                }
-                pos := RegExMatch(haystack, this.Value, match, pos)
-                
-                if (!pos) {
-                    break
-                }
-                array.Push(match)
-                pos += match.Len()
-            }
-            Return array
-        }
-
-        Split(byref haystack, pos := 1, limit := -1) {
-            limit := limit = -1 ? 10000000 : limit
-            array := []
-            for i, match in this.All(haystack, pos) {
-                if (limit > -1 && i > limit) {
-                    break
-                }
-                array.Push(gStr_Slice(haystack, pos, match.Pos() - 1))
-                Loop, % match.Count()
-                {
-                    array.Push(match.Value(A_Index))
-                }
-                pos := match.Pos() + match.Len()
-            }
-            array.Push(gStr_Slice(haystack, pos))
-            return array
-        }
-
+        return gObj_Checked(this)
     }
 
-    __New(search, options := "") {
-        base.__New(new this.inner(search, options))
+    Value {
+        get {
+            return gArr_Join([this.options, this.search], ")")
+        }
+    }
+
+    First(ByRef haystack, pos := 1) {
+        z__gutils__assertNotObject(haystack, pos)
+        needle := this.Value
+        RegExMatch(haystack, needle, match, pos)
+        return match
+    }
+
+    Replace(ByRef haystack, replacement := "", pos := 1, limit := -1) {
+        arr := []
+        for i, m in this.All(haystack, pos, limit) {
+            untouched := gStr_Slice(haystack, pos, m.Pos() - 1)
+            arr.Push(untouched)
+            if (gType_Is(replacement, "Primitive")) {
+                arr.Push(replacement)
+            }
+            else if (replacement.Call || gType_Is(replacement, "Func")) {
+                arr.Push(replacement.Call(m))
+            } else {
+                gEx_Throw("Invalid replacement value.")
+            }
+            pos := m.Pos() + m.Len()
+        }
+        arr.Push(gStr_Slice(haystack, pos))
+        return gArr_Join(arr, "")
+    }
+
+    All(ByRef haystack, pos := 1, limit := -1) {
+        z__gutils__assertNotObject(haystack, pos)
+        array:=[]
+
+        while (1) {
+            if (limit > 0 && limit < A_Index) {
+                break
+            }
+            pos := RegExMatch(haystack, this.Value, match, pos)
+
+            if (!pos) {
+                break
+            }
+            array.Push(match)
+            pos += match.Len()
+        }
+        Return array
+    }
+
+    Split(byref haystack, pos := 1, limit := -1) {
+        limit := limit = -1 ? 10000000 : limit
+        array := []
+        for i, match in this.All(haystack, pos) {
+            if (limit > -1 && i > limit) {
+                break
+            }
+            array.Push(gStr_Slice(haystack, pos, match.Pos() - 1))
+            Loop, % match.Count()
+            {
+                array.Push(match.Value(A_Index))
+            }
+            pos := match.Pos() + match.Len()
+        }
+        array.Push(gStr_Slice(haystack, pos))
+        return array
     }
 
 }

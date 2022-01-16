@@ -1,24 +1,18 @@
 
 ; Represents an entry in a stack trace.
-class gStackFrame extends gMemberCheckingProxy {
-    class Inner {
-        ToString() {
-            x := Format("{1}:{2} {4}+{3} ", e.File, e.Line, e.Function, e.Offset)
-            return x
-        }
-
-        __New(file, line, function, offset) {
-            frame := this
-            frame.File := file
-            frame.Line := line
-            frame.Function := function
-            frame.Offset := offset
-            return frame
-        }
+class gStackFrame {
+    ToString() {
+        x := Format("{1}:{2} {4}+{3} ", e.File, e.Line, e.Function, e.Offset)
+        return x
     }
 
     __New(file, line, function, offset) {
-        base.__New(new this.inner(file, line, function, offset))
+        frame := this
+        frame.File := file
+        frame.Line := line
+        frame.Function := function
+        frame.Offset := offset
+        return gObj_Checked(frame)
     }
 
 }

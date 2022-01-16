@@ -73,173 +73,167 @@ z__gutils_checkKeyExists(rootedKey) {
 }
 
 ; A registry key.
-class gRegKey extends gMemberCheckingProxy {
-    class Inner {
-        root := ""
-        subKey := ""
-        ; Create a new gRegKey. parts - one or more path parts of the key. Path must be rooted.
-        __New(parts*) {
-            root := parts[1]
-            this.root := z__gutils_noramlizeRoot(root)
-            this.subkey := gPath_Join(gArr_Slice(parts, 2))
-            if (!this.root) {
-                gEX_Throw("Root was empty.")
-            }
+class gRegKey {
+    root := ""
+    subKey := ""
+    ; Create a new gRegKey. parts - one or more path parts of the key. Path must be rooted.
+    __New(parts*) {
+        root := parts[1]
+        this.root := z__gutils_noramlizeRoot(root)
+        this.subkey := gPath_Join(gArr_Slice(parts, 2))
+        if (!this.root) {
+            gEX_Throw("Root was empty.")
         }
+        return gObj_Checked(this)
+    }
 
-        ; Gets if this object is a registry key.
-        IsKey {
-            get {
-                return True
-            }
+    ; Gets if this object is a registry key.
+    IsKey {
+        get {
+            return True
         }
+    }
 
-        ; Gets if this key is a root key.
-        IsRoot {
-            get {
-                return this.subkey == ""
-            }
+    ; Gets if this key is a root key.
+    IsRoot {
+        get {
+            return this.subkey == ""
         }
+    }
 
-        ; Gets the complete, joined form of this key.
-        Key {
-            get {
-                if (!this.subkey) {
-                    return this.root
-                }
-                return gPath_Join(this.root, this.subkey)
+    ; Gets the complete, joined form of this key.
+    Key {
+        get {
+            if (!this.subkey) {
+                return this.root
             }
+            return gPath_Join(this.root, this.subkey)
         }
+    }
 
-        ; Gets a subkey relative to this tree. Parts - the parts of the path from this key. You can use '..'.
-        Child(parts*) {
-            joined := gPath_Join(parts*)
-            resolved := z__gutils_resolveRegPath(this.Key, joined)
-            if (!z__gutils_checkKeyExists(resolved)) {
-                return ""
-            }
-            parts := z__gutils_splitRegPath(resolved)
-            child := new gRegKey(parts*)
-            return child
+    ; Gets a subkey relative to this tree. Parts - the parts of the path from this key. You can use '..'.
+    Child(parts*) {
+        joined := gPath_Join(parts*)
+        resolved := z__gutils_resolveRegPath(this.Key, joined)
+        if (!z__gutils_checkKeyExists(resolved)) {
+            return ""
         }
+        parts := z__gutils_splitRegPath(resolved)
+        child := new gRegKey(parts*)
+        return child
+    }
 
-        ; Gets the key that's the parent of this key, or throws if this key is a root.
-        Parent {
-            get {
-                if (this.IsRoot) {
-                    gEx_Throw("Can't get parent of root.")
-                }
-                parent := z__gutils_resolveRegPath(this.Key, "..")
-                parsed := z__gutils_splitRegPath(parent)
-                return new gRegKey(parsed[1], parsed[2])
-            }
-        }
-
-        ; Gets all the direct child keys of this key.
-        Children() {
-            arr := []
-            Loop, Reg, % this.key, K
-            {
-                arr.Push(new gRegKey(A_LoopRegKey, A_LoopRegSubkey, A_LoopRegName))
-            }
-            return arr
-        }
-
-        ; Gets an object consisting of all the values of this key.
-        Values() {
-            values := {}
-            Loop, Reg, % this.Key, V
-            {
-                RegRead, X
-                values[A_LoopRegName] := X
-            }
-            return values
-        }
-
-        ; Removes a value from this key. Cannot remove the default value.
-        EraseValue(name) {
-            if (name = "") {
-                gEx_Throw("The value name cannot be empty.")
-            }
-            try {
-                RegDelete, % this.Key, % name
-            } catch err {
-                gEx_ThrowObj(err)
-            }
-        }
-
-        ; Deletes this key and all its data.
-        Erase() {
+    ; Gets the key that's the parent of this key, or throws if this key is a root.
+    Parent {
+        get {
             if (this.IsRoot) {
-                gEx_Throw("You can't delete a root.")
+                gEx_Throw("Can't get parent of root.")
             }
-            try {
-                RegDelete, % this.key
-            } catch err {
-                gEx_ThrowObj(err)
-            }
-        }
-
-        ; Creates a child key with the path from `parts`.
-        Create(parts*) {
-            fullKey := z__gutils_resolveRegPath(this.Key, parts*)
-            if (z__gutils_checkKeyExists(fullKey)) {
-                gEx_Throw(Format("Key '{1}' already exists.", fullKey))
-            }
-            ; We need to create this dummy key because RegWrite can't actually create empty keys
-            fakeKey := gPath_Join(fullKey, "ahk-gutils-DELETE-THIS")
-            try {
-                RegWrite, REG_SZ, % fakeKey
-                RegDelete, % fakeKey
-            } catch err {
-                gEx_ThrowObj(err)
-            }
-            parsed := z__gutils_splitRegPath(fullKey)
+            parent := z__gutils_resolveRegPath(this.Key, "..")
+            parsed := z__gutils_splitRegPath(parent)
             return new gRegKey(parsed[1], parsed[2])
         }
+    }
 
-        ; True if this key has a child key with the path from `parts`.
-        Has(parts*) {
-            parts.InsertAt(1, this.key)
-            return z__gutils_checkKeyExists(gPath_Join(parts))
+    ; Gets all the direct child keys of this key.
+    Children() {
+        arr := []
+        Loop, Reg, % this.key, K
+        {
+            arr.Push(new gRegKey(A_LoopRegKey, A_LoopRegSubkey, A_LoopRegName))
         }
+        return arr
+    }
 
-        ; True if this key has a value called `name`.
-        HasV(name) {
-            Loop, Reg, % this.Key, V
-            {
-                if (A_LoopRegName = name) {
-                    return True
-                }
-            }
+    ; Gets an object consisting of all the values of this key.
+    Values() {
+        values := {}
+        Loop, Reg, % this.Key, V
+        {
+            RegRead, X
+            values[A_LoopRegName] := X
         }
+        return values
+    }
 
-        ; Gets the value of `name`.
-        Get(name := "") {
-            try {
-                RegRead, X, % this.Key, % name
-                return X
-            } catch err {
-                return ""
-            }
+    ; Removes a value from this key. Cannot remove the default value.
+    EraseValue(name) {
+        if (name = "") {
+            gEx_Throw("The value name cannot be empty.")
         }
+        try {
+            RegDelete, % this.Key, % name
+        } catch err {
+            gEx_ThrowObj(err)
+        }
+    }
 
-        ; Overwrites a value named `name` on this key.
-        Set(name, type, value) {
-            if (!gArr_Has(["REG_SZ", "REG_EXPAND_SZ", "REG_MULTI_SZ", "REG_DWORD", "REG_BINARY"], type)) {
-                gEx_Throw("Type " type " is not a legal regisry value type.")
-            }
-            try {
-                RegWrite, % type, % this.Key, % name, % value
-            } catch err {
-                gEx_ThrowObj(err)
+    ; Deletes this key and all its data.
+    Erase() {
+        if (this.IsRoot) {
+            gEx_Throw("You can't delete a root.")
+        }
+        try {
+            RegDelete, % this.key
+        } catch err {
+            gEx_ThrowObj(err)
+        }
+    }
+
+    ; Creates a child key with the path from `parts`.
+    Create(parts*) {
+        fullKey := z__gutils_resolveRegPath(this.Key, parts*)
+        if (z__gutils_checkKeyExists(fullKey)) {
+            gEx_Throw(Format("Key '{1}' already exists.", fullKey))
+        }
+        ; We need to create this dummy key because RegWrite can't actually create empty keys
+        fakeKey := gPath_Join(fullKey, "ahk-gutils-DELETE-THIS")
+        try {
+            RegWrite, REG_SZ, % fakeKey
+            RegDelete, % fakeKey
+        } catch err {
+            gEx_ThrowObj(err)
+        }
+        parsed := z__gutils_splitRegPath(fullKey)
+        return new gRegKey(parsed[1], parsed[2])
+    }
+
+    ; True if this key has a child key with the path from `parts`.
+    Has(parts*) {
+        parts.InsertAt(1, this.key)
+        return z__gutils_checkKeyExists(gPath_Join(parts))
+    }
+
+    ; True if this key has a value called `name`.
+    HasV(name) {
+        Loop, Reg, % this.Key, V
+        {
+            if (A_LoopRegName = name) {
+                return True
             }
         }
     }
 
-    __New(parts*) {
-        inner := new this.inner(parts*)
-        base.__New(inner)
+    ; Gets the value of `name`.
+    Get(name := "") {
+        try {
+            RegRead, X, % this.Key, % name
+            return X
+        } catch err {
+            return ""
+        }
+    }
+
+    ; Overwrites a value named `name` on this key.
+    Set(name, type, value) {
+        if (!gArr_Has(["REG_SZ", "REG_EXPAND_SZ", "REG_MULTI_SZ", "REG_DWORD", "REG_BINARY"], type)) {
+            gEx_Throw("Type " type " is not a legal regisry value type.")
+        }
+        try {
+            RegWrite, % type, % this.Key, % name, % value
+        } catch err {
+            gEx_ThrowObj(err)
+        }
     }
 
 }

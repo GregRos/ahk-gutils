@@ -83,174 +83,170 @@ z__gutils_WinGet(hwnd, subCommand) {
 }
 
 ; A reference to a specific window that lets you gets info about it.
-class gWinInfo extends gMemberCheckingProxy {
-    class Inner {
-        hwnd := ""
-
-        __New(hwnd) {
-            this.hwnd := hwnd
-        }
-
-        _winTitle() {
-            return "ahk_id " this.hwnd
-        }
-
-        _winGet(subCommand) {
-            WinGet, v, % subCommand, % this._winTitle()
-            return v
-        }
-
-        ; The window's owner process PID.
-        PID {
-            get {
-                return this._winGet("PID")
-            }
-        }
-
-        ; The name of the window's owner process.
-        ProcessName {
-            get {
-                return this._winGet("ProcessName")
-            }
-        }
-
-        ; The path to the window's owner process.
-        ProcessPath {
-            get {
-                return this._winGet("ProcessPath")
-            }
-        }
-
-        Transparent {
-            get {
-                return this._winGet("Transparent")
-            }
-        }
-
-        TransColor {
-            get {
-                return this._winGet("TransColor")
-            }
-        }
-
-        Style {
-            get {
-                return this._winGet("Style")
-            }
-        }
-
-        ExStyle {
-            get {
-                return this._winGet("ExStyle")
-            }
-        }
-
-        ; Whether the window if minimized or maximized.
-        MinMax {
-            get {
-                return this._winGet("MinMax")
-            }
-        }
-
-        ; The window's title.
-        Title {
-            get {
-                WinGetTitle, v, % this._winTitle()
-                return v
-            }
-        }
-
-        ; The window's class.
-        Class {
-            get {
-                WinGetClass, v, % this._winTitle()
-                return v
-            }
-        }
-
-        ; The window's position and size info.
-        Pos {
-            get {
-                WinGetPos, X, Y, Width, Height, % this._winTitle()
-                return {X: X
-                    ,Y: Y
-                    ,Width:Width
-                ,Height:Height}
-            }
-        }
-
-        ; Whether the window is active.
-        IsActive {
-            get {
-                return WinActive(this._winTitle())
-            }
-        }
-
-        ; The window's text.
-        Text {
-            get {
-                WinGetText, v, % this._winTitle()
-                return v
-            }
-        }
-
-        ; The window's Hwnd.
-        ID {
-            get {
-                return this.hwnd
-            }
-        }
-
-        ; Whether the window still exists.
-        Exists {
-            get {
-                return WinExist(this._winTitle()) > 0
-            }
-        }
-
-        ; Hides the window.
-        Hide() {
-            WinHide, % this._winTitle()
-        }
-
-        ; Unhides the window.
-        Show() {
-            WinShow, % this._winTitle()
-        }
-
-        ; Kills the window.
-        Kill() {
-            WinKill, % this._winTitle()
-        }
-
-        Maximize() {
-            WinMaximize, % this._winTitle()
-        }
-
-        Minimize() {
-            WinMinimize, % this._winTitle()
-        }
-
-        Move(X, Y, Width:= "", Height := "") {
-            WinMove, % this._winTitle(), , % X, % Y, % Width, % Height
-        }
-
-        Restore() {
-            WinRestore, % this._winTitle()
-        }
-
-        Set(subCommand, value := "") {
-            WinSet, % subCommand, % value, % this._winTitle()
-        }
-
-        Activate() {
-            WinActivate, % this._winTitle()
-        }
-    }
+class gWinInfo {
+    hwnd := ""
 
     __New(hwnd) {
-        base.__New(new this.inner(hwnd))
+        this.hwnd := hwnd
+        return gObj_Checked(this)
     }
+
+    _winTitle() {
+        return "ahk_id " this.hwnd
+    }
+
+    _winGet(subCommand) {
+        WinGet, v, % subCommand, % this._winTitle()
+        return v
+    }
+
+    ; The window's owner process PID.
+    PID {
+        get {
+            return this._winGet("PID")
+        }
+    }
+
+    ; The name of the window's owner process.
+    ProcessName {
+        get {
+            return this._winGet("ProcessName")
+        }
+    }
+
+    ; The path to the window's owner process.
+    ProcessPath {
+        get {
+            return this._winGet("ProcessPath")
+        }
+    }
+
+    Transparent {
+        get {
+            return this._winGet("Transparent")
+        }
+    }
+
+    TransColor {
+        get {
+            return this._winGet("TransColor")
+        }
+    }
+
+    Style {
+        get {
+            return this._winGet("Style")
+        }
+    }
+
+    ExStyle {
+        get {
+            return this._winGet("ExStyle")
+        }
+    }
+
+    ; Whether the window if minimized or maximized.
+    MinMax {
+        get {
+            return this._winGet("MinMax")
+        }
+    }
+
+    ; The window's title.
+    Title {
+        get {
+            WinGetTitle, v, % this._winTitle()
+            return v
+        }
+    }
+
+    ; The window's class.
+    Class {
+        get {
+            WinGetClass, v, % this._winTitle()
+            return v
+        }
+    }
+
+    ; The window's position and size info.
+    Pos {
+        get {
+            WinGetPos, X, Y, Width, Height, % this._winTitle()
+            return {X: X
+                ,Y: Y
+                ,Width:Width
+            ,Height:Height}
+        }
+    }
+
+    ; Whether the window is active.
+    IsActive {
+        get {
+            return WinActive(this._winTitle())
+        }
+    }
+
+    ; The window's text.
+    Text {
+        get {
+            WinGetText, v, % this._winTitle()
+            return v
+        }
+    }
+
+    ; The window's Hwnd.
+    ID {
+        get {
+            return this.hwnd
+        }
+    }
+
+    ; Whether the window still exists.
+    Exists {
+        get {
+            return WinExist(this._winTitle()) > 0
+        }
+    }
+
+    ; Hides the window.
+    Hide() {
+        WinHide, % this._winTitle()
+    }
+
+    ; Unhides the window.
+    Show() {
+        WinShow, % this._winTitle()
+    }
+
+    ; Kills the window.
+    Kill() {
+        WinKill, % this._winTitle()
+    }
+
+    Maximize() {
+        WinMaximize, % this._winTitle()
+    }
+
+    Minimize() {
+        WinMinimize, % this._winTitle()
+    }
+
+    Move(X, Y, Width:= "", Height := "") {
+        WinMove, % this._winTitle(), , % X, % Y, % Width, % Height
+    }
+
+    Restore() {
+        WinRestore, % this._winTitle()
+    }
+
+    Set(subCommand, value := "") {
+        WinSet, % subCommand, % value, % this._winTitle()
+    }
+
+    Activate() {
+        WinActivate, % this._winTitle()
+    }
+
 }
 
 ; Performs a query on windows given query object `query`, returning the first matching window.

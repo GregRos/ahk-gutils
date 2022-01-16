@@ -23,6 +23,8 @@ z__gutils_replace(match) {
 }
 
 z__gutils_test() {
+    rx := gStR_Regex("abc")
+    gAssert_MethodThrows(rx, "blah", 1)
     gAssert_Eq(gLang_VarExists(bzzt), 0)
     gAssert_Eq(IsObject(gLang_Func("gAssert_Gtr")), True)
     gAssert_Eq(gArr_Repeat("xyz", 3), ["xyz", "xyz", "xyz"])

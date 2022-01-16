@@ -177,7 +177,7 @@ class gMemberCheckingProxy {
         this.__gproxy_checking := True
     }
 
-    __gproxy_target_get(name) {
+    __gproxy_target_get(context, name) {
         target := ObjRawGet(this, "__gproxy_target")
         z := gObj_RawGet(target, name, True, found)
         return found ? {value: z} : ""
@@ -198,7 +198,7 @@ class gMemberCheckingProxy {
                 ; Can't do checking for special names without hardcoding them
                 return target[name].Call(target, args*)
             }
-            value := this.__gproxy_target_get(name)
+            value := this.__gproxy_target_get("call", name)
             if (!value) {
                 gEX_Throw(Format("Tried to call name '{1}', but it doesn't exist.", name))
             }
@@ -223,7 +223,7 @@ class gMemberCheckingProxy {
             if (!checking || gType_IsSpecialName(name)) {
                 return target[name, keys*] := value
             }
-            result := this.__gproxy_target_get(name)
+            result := this.__gproxy_target_get("set", name)
             if (!result) {
                 gEx_Throw(Format("Tried to set name '{1}', but it wasn't defined.", name))
             }
@@ -250,7 +250,7 @@ class gMemberCheckingProxy {
             if (!checking || gType_IsSpecialName(name)) {
                 return target[name, keys*]
             }
-            prop := this.__gproxy_target_get(name)
+            prop := this.__gproxy_target_get("get", name)
             if (!prop) {
                 gEx_Throw(Format("Tried to get name '{1}', but it wasn't defined.", name))
             }
@@ -263,18 +263,11 @@ class gMemberCheckingProxy {
     }
 }
 
-class gSpecCheckingProxy extends gMemberCheckingProxy {
-    __gproxy_spec := ""
-    __New(target, spec) {
-        base.__New(target)
-        this.__gproxy_spec := spec
-    }
-
-    __gproxy_target_get(name) {
-        
-    }
-    
+z__gutils_newStub(orig, self, args*) {
+    return new gMemberCheckingProxy(orig.Call(self, args*))
 }
+
+
 
 gObj_Checked(target) {
     tn := z__gutils_getTypeName(target)

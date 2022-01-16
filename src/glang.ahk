@@ -52,27 +52,6 @@ gObj_Has(what, key, deep := False) {
     return found
 }
 
-z__gutils_callableWith(value, args*) {
-    typeName := z__gutils_getTypeName(value)
-
-    if (typeName = "Primitive") {
-        gEx_Throw(Format("Tried to call name '{1}', but it was a primitive."))
-    }
-    if (typeName = "BoundFunc") {
-        ; Can't do any checking with BoundFuncs
-        return True
-    }
-    if (typeName != "Func") {
-        ; Custom objects will also behave in weird ways...
-        if (gObj_Has(value, "Call")) {
-            return True
-        }
-        ; But this one doesn't have 'Call'
-        gEx_Throw(Format("Tried to call name '{1}', but it was an uncallable object."), n)
-    }
-    return True
-}
-
 class gOopsError {
     type := ""
     message := ""

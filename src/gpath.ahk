@@ -1,26 +1,21 @@
 
 ; A path that's been parsed into its components.
-class gParsedPath extends gMemberCheckingProxy {
-    class Inner {
-        root := ""
-        path := ""
-        filename := ""
-        dir := ""
-        fileNoExt := ""
-        ext := ""
-        drive := ""
-        __New(path) {
-            SplitPath, % path, file, dir, ext, fileNoExt, drive
-            this.filename := file
-            this.dir := dir
-            this.ext := ext
-            this.fileNoExt := fileNoExt
-            this.drive := drive
-        }
-    }
-
+class gParsedPath {
+    root := ""
+    path := ""
+    filename := ""
+    dir := ""
+    fileNoExt := ""
+    ext := ""
+    drive := ""
     __New(path) {
-        base.__New(new this.inner(path))
+        SplitPath, % path, file, dir, ext, fileNoExt, drive
+        this.filename := file
+        this.dir := dir
+        this.ext := ext
+        this.fileNoExt := fileNoExt
+        this.drive := drive
+        return gObj_Checked(this)
     }
 }
 

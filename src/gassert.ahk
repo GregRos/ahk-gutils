@@ -179,6 +179,32 @@ z__gutils_reportAssertionResults(z := "") {
             z__gutils_ReportAssert(success, real)
         }
 
+        z__gutils_assertFormats.gAssert_Throws := "{2} to throw error"
+        gAssert_Throws(funcOrName, args*) {
+            funcOrName := gLang_Func(funcOrName)
+            hit := False
+            try {
+                funcOrName.Call(args*)
+            } catch err {
+                z__gutils_assertOut(gStr(err))
+                hit := True
+            }
+            z__gutils_ReportAssert(hit, "Error")
+        }
+
+        z__gutils_assertFormats.gAssert_MethodThrows := "{3} to throw error"
+
+        gAssert_MethodThrows(self, name, args*) {
+            method := ObjBindMethod(self, name)
+            try {
+                method.Call(args*)
+            } catch err {
+                z__gutils_assertOut(gStr(err))
+                hit := True
+            }
+            z__gutils_ReportAssert(hit, "Error")
+        }
+
         z__gutils_assertFormats.gAssert_Has := "{2} HAS {3}"
         gAssert_Has(real, expectedToContain) {
             if (gArr_Is(real)) {

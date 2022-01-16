@@ -27,44 +27,38 @@ gLang_Call(funcOrName, args*) {
     return funcOrName.Call(args*)
 }
 
-class gFuncSchema extends gMemberCheckingProxy {
-    class Inner {
-        __New(name) {
-            this.name := name
-            this.args := []
-        }
+class gFuncSchema {
+    __New(name) {
+        this.name := name
+        this.args := []
+    }
 
-        IsVariadic {
-            get {
-                for i, p in this.args {
-                    if (p.IsVariadic) {
-                        return True
-                    }
+    IsVariadic {
+        get {
+            for i, p in this.args {
+                if (p.IsVariadic) {
+                    return True
                 }
-                return False
             }
-        }
-
-        MinParams {
-            get {
-                for i, p in this.args {
-                    if (p.IsOptional) {
-                        return i
-                    }
-                }
-                return i
-            }
-        }
-
-        MaxParams {
-            get {
-                return this.args.MaxIndex()
-            }
+            return False
         }
     }
 
-    __New(name) {
-        base.__New(new this.inner(name))
+    MinParams {
+        get {
+            for i, p in this.args {
+                if (p.IsOptional) {
+                    return i
+                }
+            }
+            return i
+        }
+    }
+
+    MaxParams {
+        get {
+            return this.args.MaxIndex()
+        }
     }
 
 }
@@ -104,22 +98,25 @@ z__gutils_parseSchema(str) {
     return schema
 }
 
-class gCheckedCallable {
+z__gutils_assertCallable(schema, args*) {
+    if (args.MaxIndex() < schema.MinParams) {
+        gEx_Throw(Format("Tried to call function '{1}'. It needs at least {2} params, got {3}.", schema.Name, schema.MinParams, args.MaxIndex()))
+    }
+    if (args.MaxIndex() > schema.MaxParams && !schema.IsVariadic) {
+        gEx_Throw(Format("Tried to call function '{1}'. It needs at most {2} params, got {3}.", schema.name, schema.MaxParams, args.MaxIndex()))
+    }
+}
 
+class gCheckedCallable {
     _callable := ""
     _schema := ""
     __New(target, schema) {
         this._callable := target
         this._schema := schema
+        return gObj_Checked(this)
     }
     AssertCallable(args*) {
-        schema := this._schema
-        if (args.MaxIndex() < schema.MinParams) {
-            gEx_Throw(Format("Tried to call function '{1}'. It needs at least {2} params, got {3}.", schema.Name, schema.MinParams, args.MaxIndex()))
-        }
-        if (args.MaxIndex() > schema.MaxParams && !schema.IsVariadic) {
-            gEx_Throw(Format("Tried to call function '{1}'. It needs at most {2} params, got {3}.", schema.name, schema.MaxParams, args.MaxIndex()))
-        }
+        z__gutils_assertCallable(this._schema, args*)
     }
 
     Call(args*) {
@@ -136,7 +133,6 @@ class gCheckedCallable {
             }
         }
     }
-
 }
 
 gFunc_Checked(what, schema := "") {
