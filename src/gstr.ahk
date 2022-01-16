@@ -321,7 +321,7 @@ class gRegEx {
             else if (replacement.Call || gType_Is(replacement, "Func")) {
                 arr.Push(replacement.Call(m))
             } else {
-                gEx_Throw("Invalid replacement value.")
+                gEx_Throw("Invalid replacement value " replacement)
             }
             pos := m.Pos() + m.Len()
         }
@@ -349,12 +349,8 @@ class gRegEx {
     }
 
     Split(byref haystack, pos := 1, limit := -1) {
-        limit := limit = -1 ? 10000000 : limit
         array := []
-        for i, match in this.All(haystack, pos) {
-            if (limit > -1 && i > limit) {
-                break
-            }
+        for i, match in this.All(haystack, pos, limit) {
             array.Push(gStr_Slice(haystack, pos, match.Pos() - 1))
             Loop, % match.Count()
             {

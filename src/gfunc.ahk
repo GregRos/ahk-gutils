@@ -115,6 +115,7 @@ class gCheckedCallable {
         this._schema := schema
         return gObj_Checked(this)
     }
+    
     AssertCallable(args*) {
         z__gutils_assertCallable(this._schema, args*)
     }

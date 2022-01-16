@@ -186,7 +186,6 @@ z__gutils_reportAssertionResults(z := "") {
             try {
                 funcOrName.Call(args*)
             } catch err {
-                z__gutils_assertOut(gStr(err))
                 hit := True
             }
             z__gutils_ReportAssert(hit, "Error")
@@ -199,7 +198,6 @@ z__gutils_reportAssertionResults(z := "") {
             try {
                 method.Call(args*)
             } catch err {
-                z__gutils_assertOut(gStr(err))
                 hit := True
             }
             z__gutils_ReportAssert(hit, "Error")

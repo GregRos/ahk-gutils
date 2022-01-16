@@ -263,12 +263,6 @@ class gMemberCheckingProxy {
     }
 }
 
-z__gutils_newStub(orig, self, args*) {
-    return new gMemberCheckingProxy(orig.Call(self, args*))
-}
-
-
-
 gObj_Checked(target) {
     tn := z__gutils_getTypeName(target)
     if (tn != "") {
