@@ -3,7 +3,7 @@ import re
 from os import path, chdir, getcwd
 
 
-include_regex = re.compile(r'#include\s*(.*)[\t ]*\n')
+include_regex = re.compile(r'#include\s*(.*)[\t ]*\n', flags=re.IGNORECASE)
 remove_comments = re.compile(r';#.*\n')
 
 

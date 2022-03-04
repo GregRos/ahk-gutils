@@ -494,7 +494,6 @@ gLang_StackTrace(ignoreLast := 0) {
     return frames
 }
 
-#Include gstack.ahk
 
 ; Returns a slice of elements from `self` that is `start` to `end`.
 gArr_Slice(self, start := 1, end := 0) {
