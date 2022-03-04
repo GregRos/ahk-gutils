@@ -282,6 +282,8 @@ gWin_Wait(query, timeout := "") {
     old := gWin_SetMatchingInfo(query)
     try {
         WinWait, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
+        hwnd:=WinExist()
+        return new gWinInfo(hwnd)
     } finally {
         z__gutils_maybeSetMatchingInfo(old)
     }
@@ -297,6 +299,8 @@ gWin_WaitActive(query, active := 1, timeout := "") {
         } else {
             WinWaitNotActive, % query.title, % query.text, % Timeout, % query.excludeTitle, % query.excludeText
         }
+        hwnd:=WinExist()
+        return new gWinInfo(hwnd)
     } finally {
         z__gutils_maybeSetMatchingInfo(old)
     }
